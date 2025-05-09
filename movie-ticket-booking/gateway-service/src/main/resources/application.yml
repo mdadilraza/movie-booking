@@ -1,0 +1,58 @@
+spring:
+  main:
+   web-application-type: reactive
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      global-cors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns:
+              - "*"
+            allowedMethods:
+              - "*"
+            allowedHeaders:
+              - "*"
+            exposedHeaders:
+              - "*"
+            allowCredentials: true
+        default-filters:
+          - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+      routes:
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/api/auth/**, /api/users/**
+          filters:
+            - name: AuthenticationFilter
+              args:
+                skip: false
+        - id: movie-service
+          uri: lb://MOVIE-SERVICE
+          predicates:
+            - Path=/api/movies/**
+          filters:
+            - name: AuthenticationFilter
+              args:
+                skip: false
+
+  security:
+    csrf:
+      enabled: false
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+server:
+  port: 8085
+gateway:
+  auth:
+    open-endpoints:
+      - /api/auth/login
+      - /api/auth/register
+logging:
+  level:
+    org.springframework.security: DEBUG
+

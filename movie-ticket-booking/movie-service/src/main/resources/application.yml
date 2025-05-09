@@ -1,0 +1,22 @@
+server:
+  port: 8082
+spring:
+  application:
+    name: movie-service
+  datasource:
+    url: jdbc:oracle:thin:@localhost:1521:xe
+    username: movie_db
+    password: sarasu10
+    driver-class-name: oracle.jdbc.OracleDriver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
