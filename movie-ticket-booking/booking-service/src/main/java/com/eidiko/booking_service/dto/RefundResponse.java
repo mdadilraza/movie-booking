@@ -1,4 +1,12 @@
 package com.eidiko.booking_service.dto;
 
-public record RefundResponse() {
+import lombok.Data;
+
+import java.util.Map;
+@Data
+public class RefundResponse {
+    private Long bookingId;
+    private Map<String, Double> seatRefunds;
+    private String status;
+    private String transactionId;
 }

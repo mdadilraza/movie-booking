@@ -1,4 +1,4 @@
-package com.eidiko.booking_service.security;
+package com.eidiko.payment_service.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
