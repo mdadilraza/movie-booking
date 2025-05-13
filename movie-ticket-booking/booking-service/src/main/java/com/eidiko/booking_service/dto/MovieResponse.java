@@ -1,4 +1,4 @@
-package com.eidiko.movie_service.dto;
+package com.eidiko.booking_service.dto;
 import lombok.Data;
 
 import java.time.LocalDateTime;

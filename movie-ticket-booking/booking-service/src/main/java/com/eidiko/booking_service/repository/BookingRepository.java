@@ -1,4 +1,10 @@
 package com.eidiko.booking_service.repository;
 
-public interface BookingRepository {
+import com.eidiko.booking_service.entity.Booking;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface BookingRepository extends JpaRepository<Booking ,Long> {
+    List<Booking> findByUserId(Long userId);
 }

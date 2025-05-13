@@ -27,7 +27,7 @@ public class UserClientImpl implements UserClient {
             log.info("Requesting user ID for username: {}", username);
 
             UserResponse response = webClient.get()
-                    .uri("http://localhost:8085/api/users/{username}", username)
+                    .uri("/api/users/{username}", username)
                     .header("Authorization", "Bearer " + token)
                     .retrieve()
                     .onStatus(
@@ -43,10 +43,9 @@ public class UserClientImpl implements UserClient {
 
             log.info("User ID retrieved for username {}: {}", username, response.id());
             return response.id();
-
         } catch (WebClientResponseException e) {
             log.error("User not found or client error: {}", e.getMessage());
-            throw new UserNotFoundException("User not found: " + e.getResponseBodyAsString(), e);
+            throw new UserNotFoundException("User not found: " + e.getResponseBodyAsString());
         } catch (Exception e) {
             log.error("Error calling user service for username {}: {}", username, e.getMessage());
             throw new UserNotFoundException("Unable to get user ID for username " + username);
