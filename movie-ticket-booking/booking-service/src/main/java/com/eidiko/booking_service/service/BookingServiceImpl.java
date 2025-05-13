@@ -128,8 +128,9 @@ public class BookingServiceImpl implements BookingService{
         }).collect(Collectors.toSet());
 
         booking.setSeats(seatEntities);
+        log.info("before booking saving");
         Booking bookingSaved = bookingRepository.save(booking);
-
+      log.info("Booking saved with Id -{}" ,bookingSaved.getId());
         // Process payment
         double totalAmount = TICKET_PRICE * seatEntities.size();
         PaymentRequest paymentRequest = new PaymentRequest();

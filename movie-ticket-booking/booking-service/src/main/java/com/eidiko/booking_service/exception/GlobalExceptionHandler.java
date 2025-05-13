@@ -20,7 +20,7 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
-    private static final String BASE_URI = "https://example.com/errors/";
+    private static final String BASE_URI = "https://example.com/booking-service/errors/";
 
     // 1. Hibernate Validator (DTO field validation)
     @ExceptionHandler(MethodArgumentNotValidException.class)

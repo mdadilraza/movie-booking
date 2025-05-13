@@ -24,7 +24,7 @@ public class MovieClientImpl implements MovieClient{
             log.info("Requesting movie to validate by movieId: {}", movieId);
 
             webClient.get()
-                    .uri("/api/users/{username}", movieId)
+                    .uri("/api/movies/{movieId}", movieId)
                     .header("Authorization", "Bearer " + token)
                     .retrieve()
                     .onStatus(
