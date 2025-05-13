@@ -5,7 +5,7 @@ spring:
     name: booking-service
   datasource:
     url: jdbc:oracle:thin:@localhost:1521:xe
-    username: booking_db
+    username: order_db
     password: sarasu10
     driver-class-name: oracle.jdbc.OracleDriver
 
