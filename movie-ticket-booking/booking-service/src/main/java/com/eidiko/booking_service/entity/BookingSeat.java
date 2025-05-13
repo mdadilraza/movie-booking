@@ -1,17 +1,19 @@
 package com.eidiko.booking_service.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@ToString(exclude = "booking")
+@EqualsAndHashCode(exclude = "booking")
 public class BookingSeat {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "booking_seat_seq")
+    @SequenceGenerator(name = "booking_seat_seq", schema = "ORDER_DB"
+            , sequenceName = "BOOKING_SEAT_SEQ", allocationSize = 1)
     private long id;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "booking_id", nullable = false)
