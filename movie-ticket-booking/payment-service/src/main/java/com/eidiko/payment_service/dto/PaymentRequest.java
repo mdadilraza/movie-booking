@@ -12,4 +12,8 @@ public class PaymentRequest {
     @NotNull(message = "Amount is required")
     @Positive(message = "Amount must be positive")
     private Double amount;
+
+    @NotNull(message = "Number of seats is required")
+    @Positive(message = "Number of seats must be positive")
+    private Integer numberOfSeats;
 }

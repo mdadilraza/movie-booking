@@ -20,4 +20,6 @@ public class AuthorizationService {
                 .getAuthorities().stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
     }
+
+
 }

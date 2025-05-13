@@ -26,42 +26,30 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<User> register(@RequestBody UserRequest request) {
-        log.info("UserRequest {}" ,request);
-        try {
             User user = userService.register(request);
             return ResponseEntity.ok(user);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
+
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
-        try {
             AuthResponse response = userService.login(request);
             return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
+
     }
 
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refreshToken(@RequestBody Map<String, String> request) {
-        try {
             AuthResponse response = userService.refreshToken(request.get("refreshToken"));
             return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+
     }
 
     @PostMapping("/validate")
     public ResponseEntity<Map<String, String>> validateToken(@RequestBody Map<String, String> request) {
-        try {
+
             Map<String, String> response = userService.validateToken(request.get("token"));
             return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+
     }
 }

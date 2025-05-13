@@ -21,22 +21,18 @@ public class MovieController {
     @PostMapping()
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MovieResponse> createMovie(@RequestBody MovieRequest request) {
-        try {
+
             MovieResponse response = movieService.createMovie(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-        }
+
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<MovieResponse> getMovieById(@PathVariable Long id) {
-        try {
+
             MovieResponse response = movieService.getMovieById(id);
             return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
+
     }
 
     @GetMapping
@@ -51,22 +47,18 @@ public class MovieController {
             @PathVariable Long id,
             @RequestBody MovieRequest request
     ) {
-        try {
+
             MovieResponse response = movieService.updateMovie(id, request);
             return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-        }
+
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteMovie(@PathVariable Long id) {
-        try {
+
             movieService.deleteMovie(id);
             return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+
     }
 }

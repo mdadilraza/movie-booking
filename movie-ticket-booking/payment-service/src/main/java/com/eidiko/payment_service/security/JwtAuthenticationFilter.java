@@ -1,4 +1,4 @@
-package com.eidiko.booking_service.security;
+package com.eidiko.payment_service.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

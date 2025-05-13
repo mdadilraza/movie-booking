@@ -82,8 +82,9 @@ public class JwtUtil {
 
     public Claims extractAllClaims(String token) {
         try {
-            return Jwts.parser()
-                    .setSigningKey(SECRET_KEY)
+            return Jwts.parserBuilder()
+                    .setSigningKey(getSignInKey())
+                    .build()
                     .parseClaimsJws(token)
                     .getBody();
         } catch (MalformedJwtException | SignatureException | ExpiredJwtException | IllegalArgumentException e) {
