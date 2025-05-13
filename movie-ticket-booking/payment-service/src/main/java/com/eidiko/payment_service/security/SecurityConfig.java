@@ -19,7 +19,7 @@ public class SecurityConfig {
         return
                 httpSecurity.csrf(AbstractHttpConfigurer::disable)
                         .authorizeHttpRequests(auth ->auth
-                                .requestMatchers("/api/bookings/**").authenticated()
+                                .requestMatchers("/api/payments/**").authenticated()
                                 .anyRequest().authenticated())
                         .sessionManagement(session ->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

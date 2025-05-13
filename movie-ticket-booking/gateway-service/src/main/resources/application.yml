@@ -36,7 +36,22 @@ spring:
             - name: AuthenticationFilter
               args:
                 skip: false
-
+        - id: booking-service
+          uri: lb://BOOKING-SERVICE
+          predicates:
+            - Path=/api/bookings/**
+          filters:
+            - name: AuthenticationFilter
+              args:
+                skip: false
+            - id: payment-service
+              uri: lb://PAYMENT-SERVICE
+              predicates:
+                - Path=/api/payments/**
+              filters:
+                - name: AuthenticationFilter
+                  args:
+                    skip: false
   security:
     csrf:
       enabled: false

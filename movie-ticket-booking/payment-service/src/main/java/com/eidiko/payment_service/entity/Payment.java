@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
 
@@ -14,21 +14,26 @@ import java.time.LocalDateTime;
 @Data
 public class Payment {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    private long id;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "payment_seq")
+    @SequenceGenerator(name = "payment_seq", sequenceName = "payment_seq", allocationSize = 1)
+    private Long id;
+
     @Column(name = "booking_id", nullable = false)
     private Long bookingId;
 
-    @Column(name = "amount", nullable = false)
+    @Column(nullable = false)
     private Double amount;
 
-    @Column(name = "status", nullable = false)
-    private String status;
+    @Column(name = "number_of_seats", nullable = false)
+    private Integer numberOfSeats;
 
-    @Column(name = "transaction_id", unique = true)
+    @Column(name = "transaction_id", nullable = false)
     private String transactionId;
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(nullable = false)
+    private String status; // e.g., SUCCESS, FAILED
+
+    @CreatedDate
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 }
