@@ -51,11 +51,17 @@ public class JwtUtil {
     }
 
     public String extractUsername(String token) {
-        return extractAllClaims(token).getSubject();
+
+      String userName=   extractAllClaims(token).getSubject();
+   log.info("username -{}",userName);
+   return userName;
     }
 
     public String extractRole(String token) {
-        return extractAllClaims(token).get("role", String.class);
+        String role=   extractAllClaims(token).get("role" ,String.class);
+        log.info("role -{}",role);
+        return role;
+
     }
 
 
@@ -87,10 +93,22 @@ public class JwtUtil {
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-        } catch (MalformedJwtException | SignatureException | ExpiredJwtException | IllegalArgumentException e) {
-            log.error("JWT error: {}", e.getMessage());
-            throw new InvalidJwtException("Invalid JWT token", e);
+        } catch (MalformedJwtException  e) {
+            log.error("Malformed JWT token: {}", e.getMessage());
+            throw new InvalidJwtException("Malformed JWT token", e);
         }
+        catch (SignatureException e){
+            log.error("Invalid Jwt Signature: {}", e.getMessage());
+            throw new InvalidJwtException("Invalid Jwt Signature", e);
+        }
+        catch (ExpiredJwtException e){
+            log.error("Jwt token has Expired :{}",e.getMessage());
+            throw new InvalidJwtException("Jwt token has Expired", e);
+        }catch (IllegalArgumentException e){
+            log.error("some problem in token :{}",e.getMessage());
+            throw new InvalidJwtException("some problem in token", e);
+        }
+
     }
 
 
