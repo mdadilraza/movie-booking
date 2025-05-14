@@ -27,3 +27,8 @@ jwt:
     expiration: 900000 # 15 minutes in milliseconds
   refresh-token:
     expiration: 604800000 # 7 days in milliseconds
+#logging:
+#  level:
+#    org.springframework.web: DEBUG
+#    org.springframework.security: DEBUG
+#    com.eidiko.user_service: DEBUG
