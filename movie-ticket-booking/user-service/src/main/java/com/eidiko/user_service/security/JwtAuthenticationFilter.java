@@ -56,12 +56,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             response.getWriter().write("{ \"error\": \"" + ex.getMessage() + "\" }");
         }
 
-<<<<<<< HEAD
 
 
-=======
-        filterChain.doFilter(request, response);
->>>>>>> 21fe3246d85396a04c9ef0b5df05a4b9fc29875f
 
     }
 }
