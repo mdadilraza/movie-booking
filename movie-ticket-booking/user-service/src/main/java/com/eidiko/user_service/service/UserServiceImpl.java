@@ -14,7 +14,6 @@ import com.eidiko.user_service.util.JwtUtil;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -95,13 +94,16 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Map<String, String> validateToken(String token) {
+        log.info("inside validate api service");
         if (jwtUtil.validateToken(token)) {
+            log.info("validated successfully ");
             Map<String, String> response = new HashMap<>();
             response.put("username", jwtUtil.extractUsername(token));
             response.put("role", jwtUtil.extractRole(token));
             log.info("response in service -{}" ,response.get("username"));
             return response;
         }
+        log.info("validation failed ");
         throw new IllegalArgumentException("Invalid token");
     }
 

@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
+import org.springframework.util.PathMatcher;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import java.util.Map;
@@ -21,6 +23,7 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
 
     private final WebClient.Builder webClientBuilder;
     private final AuthProperties authProperties ;
+    private final PathMatcher pathMatcher = new AntPathMatcher();
 
 
 
@@ -41,11 +44,15 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
             log.info("Incoming request path: {}", path);
 
             // Bypass token validation for open endpoints
-            if (authProperties.getOpenEndpoints().contains(path)) {
-                log.info("Open_Endpoints {}" ,authProperties.getOpenEndpoints());
+            boolean isOpenEndpoint = authProperties.getOpenEndpoints().stream()
+                    .anyMatch(openEndpoint -> pathMatcher.match(openEndpoint, path));
+
+            if (isOpenEndpoint) {
+                log.info("Open_Endpoints: {}", authProperties.getOpenEndpoints());
                 log.info("Skipping authentication for open endpoint: {}", path);
                 return chain.filter(exchange);
             }
+
 
             // Check for Authorization header
             String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
