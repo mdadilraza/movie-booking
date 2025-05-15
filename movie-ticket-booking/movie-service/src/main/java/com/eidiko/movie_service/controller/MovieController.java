@@ -27,7 +27,7 @@ public class MovieController {
 
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ResponseEntity<MovieResponse> getMovieById(@PathVariable Long id) {
 
             MovieResponse response = movieService.getMovieById(id);
@@ -35,7 +35,7 @@ public class MovieController {
 
     }
 
-    @GetMapping
+    @GetMapping("/getAllMovies")
     public ResponseEntity<List<MovieResponse>> getAllMovies() {
         List<MovieResponse> movies = movieService.getAllMovies();
         return ResponseEntity.ok(movies);

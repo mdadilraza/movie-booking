@@ -65,7 +65,8 @@ public class JwtUtil {
     }
 
 
-    public boolean validateToken(String token)  {
+    public boolean
+    validateToken(String token)  {
         boolean result = false;
         try {
             log.info("Validating token {} " ,token);

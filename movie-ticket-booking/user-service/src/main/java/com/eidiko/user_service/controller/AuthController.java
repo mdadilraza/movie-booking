@@ -25,31 +25,31 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<User> register(@RequestBody UserRequest request) {
-            User user = userService.register(request);
-            return ResponseEntity.ok(user);
+        User user = userService.register(request);
+        return ResponseEntity.ok(user);
 
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
-            AuthResponse response = userService.login(request);
-            return ResponseEntity.ok(response);
+        AuthResponse response = userService.login(request);
+        return ResponseEntity.ok(response);
 
     }
 
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refreshToken(@RequestBody Map<String, String> request) {
-            AuthResponse response = userService.refreshToken(request.get("refreshToken"));
-            return ResponseEntity.ok(response);
+        AuthResponse response = userService.refreshToken(request.get("refreshToken"));
+        return ResponseEntity.ok(response);
 
     }
 
     @PostMapping("/validate")
     public ResponseEntity<Map<String, String>> validateToken(@RequestBody Map<String, String> request) {
-
-            Map<String, String> response = userService.validateToken(request.get("token"));
-            log.info("response -{}",response.get("role"));
-            return ResponseEntity.ok(response);
+        log.info("inside validate api");
+        Map<String, String> response = userService.validateToken(request.get("token"));
+        log.info("response -{}", response.get("role"));
+        return ResponseEntity.ok(response);
 
     }
 }
