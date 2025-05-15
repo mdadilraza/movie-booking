@@ -7,7 +7,6 @@ import com.eidiko.user_service.entity.User;
 import com.eidiko.user_service.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -49,6 +48,7 @@ public class AuthController {
     public ResponseEntity<Map<String, String>> validateToken(@RequestBody Map<String, String> request) {
 
             Map<String, String> response = userService.validateToken(request.get("token"));
+            log.info("response -{}",response.get("role"));
             return ResponseEntity.ok(response);
 
     }
