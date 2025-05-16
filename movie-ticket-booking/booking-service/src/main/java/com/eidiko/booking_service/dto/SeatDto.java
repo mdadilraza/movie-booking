@@ -6,4 +6,6 @@ import lombok.Data;
 public class SeatDto {
     private String seatNumber;
     private String status;
+    private String seatType;
+    private Double price;
 }

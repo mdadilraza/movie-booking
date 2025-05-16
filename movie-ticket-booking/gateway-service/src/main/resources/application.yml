@@ -39,7 +39,7 @@ spring:
         - id: booking-service
           uri: lb://BOOKING-SERVICE
           predicates:
-            - Path=/api/bookings/**
+            - Path=/api/bookings/**,/api/seats/**
           filters:
             - name: AuthenticationFilter
               args:

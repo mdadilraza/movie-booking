@@ -5,34 +5,29 @@ import com.eidiko.booking_service.client.MovieClient;
 import com.eidiko.booking_service.client.PaymentClient;
 import com.eidiko.booking_service.constants.BookingStatus;
 import com.eidiko.booking_service.dto.*;
-import com.eidiko.booking_service.entity.Booking;
-import com.eidiko.booking_service.entity.BookingSeat;
-import com.eidiko.booking_service.entity.Refund;
-import com.eidiko.booking_service.entity.Showtime;
+import com.eidiko.booking_service.entity.*;
 import com.eidiko.booking_service.exception.SeatNotAvailableException;
 import com.eidiko.booking_service.exception.ShowtimeNotFoundException;
 import com.eidiko.booking_service.exception.UnauthorizedBookingActionException;
 import com.eidiko.booking_service.exception.UserNotFoundException;
 import com.eidiko.booking_service.mapper.BookingMapper;
-import com.eidiko.booking_service.repository.BookingRepository;
-import com.eidiko.booking_service.repository.BookingSeatRepository;
-import com.eidiko.booking_service.repository.RefundRepository;
-import com.eidiko.booking_service.repository.ShowtimeRepository;
+import com.eidiko.booking_service.repository.*;
 import com.eidiko.booking_service.strategy.factory.CancellationValidationStrategyFactory;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class BookingServiceImpl implements BookingService{
+public class BookingServiceImpl implements BookingService {
     private final ShowtimeRepository showtimeRepository;
     private final BookingRepository bookingRepository;
     private final BookingSeatRepository bookingSeatRepository;
@@ -43,8 +38,7 @@ public class BookingServiceImpl implements BookingService{
     private final AuthorizationService authService;
     private final BookingMapper bookingMapper;
     private final CancellationValidationStrategyFactory strategyFactory;
-
-    private static final double TICKET_PRICE = 10.0; // Fallback price
+    private final SeatRepository seatRepository;
 
     @Override
     @Transactional
@@ -103,13 +97,19 @@ public class BookingServiceImpl implements BookingService{
             log.warn("Seats already booked for showtimeId: {}: {}", request.getShowtimeId(), bookedSeats);
             throw new SeatNotAvailableException("Seats already booked: " + bookedSeats);
         }
+        // Validate seat types
+        Map<String, Long> seatTypes = request.getSeatTypes();
+        if (!seatTypes.keySet().containsAll(request.getSeatNumbers()) || seatTypes.size() != request.getSeatNumbers().size()) {
+            log.warn("Invalid seat types provided for showtimeId: {}", request.getShowtimeId());
+            throw new IllegalArgumentException("Seat types must be provided for all seat numbers");
+        }
 
         // Get user ID from token
         String username = authService.getCurrentUsername();
         Long userId = userClient.getUserId(username);
         if (userId == null) {
             log.warn("User ID not found for username : {}", username);
-            throw new UserNotFoundException("User ID not found");
+            throw new UserNotFoundException("User  ID not found");
         }
 
         // Create booking
@@ -118,24 +118,35 @@ public class BookingServiceImpl implements BookingService{
         booking.setShowtime(showtime);
         booking.setStatus(BookingStatus.CONFIRMED);
 
-        // Create seats
-        Set<BookingSeat> seatEntities = request.getSeatNumbers().stream().map(seat -> {
+        // Create seats and calculate total price
+        double totalPrice = 0.0;
+        Set<BookingSeat> seatEntities = request.getSeatNumbers().stream().map(seatNumber -> {
+            Long seatId = seatTypes.get(seatNumber);
+            Seats seatType = seatRepository.findById(seatId)
+                    .orElseThrow(() -> new EntityNotFoundException("Seat type with id " + seatId + " not found"));
             BookingSeat seatEntity = new BookingSeat();
-            seatEntity.setSeatNumber(seat);
+            seatEntity.setSeatNumber(seatNumber);
             seatEntity.setStatus(BookingStatus.CONFIRMED);
             seatEntity.setBooking(booking);
+            seatEntity.setSeats(seatType);
             return seatEntity;
         }).collect(Collectors.toSet());
 
+        // Calculate total price
+        for (BookingSeat seat : seatEntities) {
+            totalPrice += seat.getSeats().getBasePrice();
+        }
+        booking.setTotalPrice(totalPrice);
         booking.setSeats(seatEntities);
-        log.info("before booking saving");
+
+        log.info("Before booking saving, totalPrice: {}", totalPrice);
         Booking bookingSaved = bookingRepository.save(booking);
-      log.info("Booking saved with Id -{}" ,bookingSaved.getId());
+        log.info("Booking saved with Id: {}", bookingSaved.getId());
+
         // Process payment
-        double totalAmount = TICKET_PRICE * seatEntities.size();
         PaymentRequest paymentRequest = new PaymentRequest();
         paymentRequest.setBookingId(bookingSaved.getId());
-        paymentRequest.setAmount(totalAmount);
+        paymentRequest.setAmount(totalPrice);
         paymentRequest.setNumberOfSeats(seatEntities.size());
         PaymentResponse paymentResponse = paymentClient.createPayment(paymentRequest);
 
@@ -143,7 +154,8 @@ public class BookingServiceImpl implements BookingService{
         showtime.setAvailableSeats(showtime.getAvailableSeats() - seatEntities.size());
         showtimeRepository.save(showtime);
 
-        log.info("Created booking with ID: {} for showtimeId: {}", bookingSaved.getId(), request.getShowtimeId());
+        log.info("Created booking with ID: {} for showtimeId: {}, totalPrice: {}",
+                bookingSaved.getId(), request.getShowtimeId(), totalPrice);
         return bookingMapper.mapToBookingResponse(bookingSaved, paymentResponse);
     }
 
@@ -165,100 +177,130 @@ public class BookingServiceImpl implements BookingService{
     @Transactional
     public List<BookingResponse> cancelSeats(long bookingId, CancelSeatRequest request) {
         log.info("Canceling seats for bookingId: {}, seats: {}", bookingId, request.getSeats());
+
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new SeatNotAvailableException("Booking not found"));
 
-        // Validate cancellation
+        validateCancellationStrategies(booking, request);
+        authorizeUser(booking);
+
+        Set<String> seatsToCancel = determineSeatsToCancel(booking, request);
+        validateSeatOwnership(booking, seatsToCancel);
+        validateSeatStatusAndRefunds(booking, bookingId, seatsToCancel);
+
+        double totalRefundAmount = calculateTotalRefund(booking, seatsToCancel);
+        RefundResponse refundResponse = processRefund(bookingId, seatsToCancel);
+
+        int cancelCount = cancelSeatsAndSaveRefunds(booking, bookingId, seatsToCancel, refundResponse);
+        updateBookingStatus(booking);
+        updateShowtimeIfNeeded(booking, cancelCount, totalRefundAmount);
+
+        BookingResponse response = bookingMapper.mapToBookingResponse(
+                booking,
+                cancelCount > 0 ? "INITIATED" : null,
+                totalRefundAmount
+        );
+
+        return List.of(response);
+    }
+    private void validateCancellationStrategies(Booking booking, CancelSeatRequest request) {
         var strategies = strategyFactory.getStrategies(booking, request.getSeats());
         strategies.forEach(strategy -> strategy.validate(booking));
+    }
 
-        // Authorization
+    private void authorizeUser(Booking booking) {
         Long currentUserId = userClient.getUserId(authService.getCurrentUsername());
-        if (currentUserId == null) {
-            log.warn("User ID not found for username: {}", authService.getCurrentUsername());
-            throw new UserNotFoundException("User ID not found");
-        }
-        if (!booking.getUserId().equals(currentUserId) && !authService.isAdmin()) {
-            log.warn("Unauthorized attempt to cancel booking {} by userId: {}", bookingId, currentUserId);
+        if (currentUserId == null ||
+                (!booking.getUserId().equals(currentUserId) && !authService.isAdmin())) {
+            log.warn("Unauthorized attempt to cancel booking {} by userId: {}", booking.getId(), currentUserId);
             throw new UnauthorizedBookingActionException("Only the user or admin can cancel");
         }
+    }
 
-        // Determine seats to cancel
-        Set<String> seatsToCancel = request.getSeats() == null || request.getSeats().isEmpty()
+    private Set<String> determineSeatsToCancel(Booking booking, CancelSeatRequest request) {
+        return (request.getSeats() == null || request.getSeats().isEmpty())
                 ? booking.getSeats().stream().map(BookingSeat::getSeatNumber).collect(Collectors.toSet())
                 : request.getSeats();
+    }
 
-        // Validate seats belong to booking
+    private void validateSeatOwnership(Booking booking, Set<String> seatsToCancel) {
         Set<String> bookingSeats = booking.getSeats().stream()
-                .map(BookingSeat::getSeatNumber)
-                .collect(Collectors.toSet());
+                .map(BookingSeat::getSeatNumber).collect(Collectors.toSet());
         if (!bookingSeats.containsAll(seatsToCancel)) {
             log.warn("Invalid seats requested for cancellation: {}", seatsToCancel);
             throw new SeatNotAvailableException("Some seats are not part of this booking");
         }
+    }
 
-        // Check if seats are already canceled or refunded
+    private void validateSeatStatusAndRefunds(Booking booking, long bookingId, Set<String> seatsToCancel) {
         for (String seatNumber : seatsToCancel) {
-            if (booking.getSeats().stream()
-                    .filter(seat -> seat.getSeatNumber().equals(seatNumber))
-                    .anyMatch(seat -> seat.getStatus().equals(BookingStatus.CANCELED))) {
+            BookingSeat seat = booking.getSeats().stream()
+                    .filter(s -> s.getSeatNumber().equals(seatNumber))
+                    .findFirst()
+                    .orElseThrow();
+
+            if (seat.getStatus() .equals(BookingStatus.CANCELED)) {
                 log.warn("Seat {} already canceled for bookingId: {}", seatNumber, bookingId);
                 throw new SeatNotAvailableException("Seat already canceled: " + seatNumber);
             }
+
             if (refundRepository.existsByBookingIdAndSeatNumber(bookingId, seatNumber)) {
                 log.warn("Refund already processed for seat {} in bookingId: {}", seatNumber, bookingId);
                 throw new SeatNotAvailableException("Refund already processed for seat: " + seatNumber);
             }
         }
+    }
 
-        // Process refunds
+    private double calculateTotalRefund(Booking booking, Set<String> seatsToCancel) {
+        return booking.getSeats().stream()
+                .filter(seat -> seatsToCancel.contains(seat.getSeatNumber()))
+                .mapToDouble(seat -> seat.getSeats().getBasePrice())
+                .sum();
+    }
+
+    private RefundResponse processRefund(long bookingId, Set<String> seatsToCancel) {
         RefundRequest refundRequest = new RefundRequest();
         refundRequest.setBookingId(bookingId);
         refundRequest.setSeatNumbers(seatsToCancel);
-        RefundResponse refundResponse = paymentClient.processRefund(refundRequest);
+        return paymentClient.processRefund(refundRequest);
+    }
 
-        // Update seats and store refunds
+    private int cancelSeatsAndSaveRefunds(Booking booking, long bookingId,
+                                          Set<String> seatsToCancel, RefundResponse refundResponse) {
         int cancelCount = 0;
-        double totalRefundAmount = 0.0;
         for (BookingSeat seat : booking.getSeats()) {
-            if (seatsToCancel.contains(seat.getSeatNumber()) && !seat.getStatus().equals(BookingStatus.CANCELED)) {
+            if (seatsToCancel.contains(seat.getSeatNumber()) && !seat.getStatus().equals( BookingStatus.CANCELED)) {
                 seat.setStatus(BookingStatus.CANCELED);
                 cancelCount++;
 
-                // Store refund
                 Refund refund = new Refund();
                 refund.setBookingId(bookingId);
                 refund.setSeatNumber(seat.getSeatNumber());
-                refund.setAmount(refundResponse.getSeatRefunds().get(seat.getSeatNumber()));
+                refund.setAmount(seat.getSeats().getBasePrice());
                 refund.setStatus(refundResponse.getStatus());
                 refund.setTransactionId(refundResponse.getTransactionId());
                 refundRepository.save(refund);
-
-                totalRefundAmount += refund.getAmount();
             }
         }
+        return cancelCount;
+    }
 
-        // Update booking status
+    private void updateBookingStatus(Booking booking) {
         boolean allSeatsCanceled = booking.getSeats().stream()
-                .allMatch(seat -> seat.getStatus().equals(BookingStatus.CANCELED));
+                .allMatch(seat -> seat.getStatus() .equals( BookingStatus.CANCELED));
         booking.setStatus(allSeatsCanceled ? BookingStatus.CANCELED : BookingStatus.PARTIAL_CANCELED);
+    }
 
-        // Update showtime
+    private void updateShowtimeIfNeeded(Booking booking, int cancelCount, double totalRefundAmount) {
         if (cancelCount > 0) {
             Showtime showtime = booking.getShowtime();
             showtime.setAvailableSeats(showtime.getAvailableSeats() + cancelCount);
             showtimeRepository.save(showtime);
             bookingRepository.save(booking);
             log.info("Canceled {} seats for bookingId: {}, refund initiated for amount: {}",
-                    cancelCount, bookingId, totalRefundAmount);
+                    cancelCount, booking.getId(), totalRefundAmount);
         }
-
-        // Map response
-        BookingResponse response = bookingMapper.mapToBookingResponse(
-                booking,
-                cancelCount > 0 ? "INITIATED" : null,
-                totalRefundAmount
-        );
-        return List.of(response);
     }
+
+
 }
