@@ -19,6 +19,7 @@ public class MapToResponse {
         response.setCreatedAt(movie.getCreatedAt());
         response.setUpdatedAt(movie.getUpdatedAt());
         response.setActive(movie.isActive());
+        response.setPosterUrl(movie.getMoviePosterUrl());
         return response;
     }
 }
