@@ -12,13 +12,13 @@ export const login =createAsyncThunk('auth/login',async(user,{rejectWithValue})=
     try{
      const response = await loginUrl(user);
      console.log("resposne",response.data);
-     localStorage.setItem("accessToken",response.data.result[0]?.accessToken);
-     localStorage.setItem("refreshToken",response.data.result[0]?.refreshToken);
-     localStorage.setItem("role",response.data.result[0]?.userDetails.role);
+     localStorage.setItem("accessToken",response.data?.accessToken);
+     localStorage.setItem("refreshToken",response.data?.refreshToken);
+     localStorage.setItem("role",response.data?.userResponseDto?.role);
      return response.data;
      
     }catch(error){
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error?.response?.data);
     }
         
 })
@@ -32,7 +32,7 @@ export const register = createAsyncThunk('auth/register',async(user,{rejectWithV
   }catch(error){
     console.log("error",error);
     
-    return rejectWithValue(error.response.data);
+    return rejectWithValue(error?.response?.data);
   }
 })
 
