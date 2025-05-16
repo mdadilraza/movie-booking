@@ -8,14 +8,14 @@ const interceptorInstance = axios.create({
 
 interceptorInstance.interceptors.request.use(
     (config) =>{
-        const accessToken = localStorage.getItem("accessToken");
+        const jwtToken = localStorage.getItem("accessToken");
         if(config.url === `${url}/api/auth/login`){
             localStorage.clear();
             return config;
         }
         
         if(jwtToken){
-            config.headers["Authorization"]=`Bearer ${accessToken}`;
+            config.headers["Authorization"]=`Bearer ${jwtToken}`;
             config.headers["Content-Type"] ="application/json";
         }
         return config;

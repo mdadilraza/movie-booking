@@ -1,9 +1,17 @@
 import React, { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { login } from '../slice/UserSlice';
-
+import { Button, Card, TextField } from '@mui/material';
 
 const UserLogin = () => {
+  const cardStyles = {
+    width: '400px',
+    height: 'auto',
+    display: 'flex',
+    flexDirection: 'column',
+    padding: '30px',
+ 
+  };
   const dispatch = useDispatch();
   const { loading, error } = useSelector((state) => state.auth);
   const [formError, setFormError] = useState(""); 
@@ -38,40 +46,36 @@ const UserLogin = () => {
           });
       };
   return (
-    <div className="login-form">
-    <h2>login</h2>
+    <>
     <form onSubmit={handleSubmit}>
-     
-      <div>
-        <label htmlFor="text">username:</label>
-        <input
-          type="text"
-          id="text"
+      <Card sx={cardStyles}>
+        <h2>Login</h2>
+        {formError && <p style={{ color: 'red' }}>{formError}</p>}
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+
+        <TextField
+          label="Username"
           name="username"
+          variant="standard"
           value={formData.username}
+          size="small"
           onChange={handleChange}
-        />
-      </div>
-    
-      <div>
-        <label htmlFor="password">Password:</label>
-        <input
-          type="password"
-          id="password"
+          />
+        <TextField
+          label="Password"
           name="password"
+          type="password"
+          variant="standard"
           value={formData.password}
+          size="small"
           onChange={handleChange}
-        />
-      </div>
-      {formError && <p style={{ color: "red" }}>{formError}</p>}  
-      {error && <p style={{ color: "red" }}>{error.message || "login failed"}</p>} 
-      <div>
-        <button type="submit" disabled={loading}>
-          {loading ? "login..." : "login"}
-        </button>
-      </div>
+          />
+        <Button type="submit" disabled={loading}>
+          {loading ? 'Logging in...' : 'Login'}
+        </Button>
+      </Card>
     </form>
-  </div>
+          </>
   )
 }
 
