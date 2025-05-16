@@ -14,4 +14,5 @@ public class MovieResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private boolean isActive;
+    private String posterUrl;
 }
