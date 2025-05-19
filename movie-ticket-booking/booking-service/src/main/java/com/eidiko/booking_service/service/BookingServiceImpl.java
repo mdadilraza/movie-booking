@@ -300,6 +300,7 @@ public class BookingServiceImpl implements BookingService {
             log.info("Canceled {} seats for bookingId: {}, refund initiated for amount: {}",
                     cancelCount, booking.getId(), totalRefundAmount);
         }
+        
     }
 
 
