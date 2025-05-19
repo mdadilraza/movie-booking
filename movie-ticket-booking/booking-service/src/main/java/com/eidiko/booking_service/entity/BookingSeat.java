@@ -1,5 +1,6 @@
 package com.eidiko.booking_service.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,6 +18,7 @@ public class BookingSeat {
     private long id;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "booking_id", nullable = false)
+    @JsonBackReference
     private Booking booking;
 
     @Column(name = "seat_number", nullable = false)
@@ -24,4 +26,7 @@ public class BookingSeat {
 
     @Column(nullable = false)
     private String status;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "SEAT_ID", nullable = false)
+    private Seats seats;
 }

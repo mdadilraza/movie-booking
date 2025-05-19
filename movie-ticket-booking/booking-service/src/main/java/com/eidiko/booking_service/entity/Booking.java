@@ -1,5 +1,6 @@
 package com.eidiko.booking_service.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -35,8 +36,12 @@ public class Booking {
     @Column(nullable = false)
     private String status;
 
+    @Column(name = "TOTAL_PRICE", nullable = false)
+    private Double totalPrice;
+
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true
     ,fetch = FetchType.LAZY)
+    @JsonManagedReference
     private Set<BookingSeat> seats = new HashSet<>();
 
     @CreatedDate
