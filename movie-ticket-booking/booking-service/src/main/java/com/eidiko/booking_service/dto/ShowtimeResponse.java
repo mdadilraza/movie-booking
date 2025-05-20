@@ -1,7 +1,9 @@
 package com.eidiko.booking_service.dto;
 
-import java.time.LocalDateTime;
+import lombok.Data;
 
+import java.time.LocalDateTime;
+@Data
 public class ShowtimeResponse {
     private Long id;
     private Long movieId;

@@ -180,19 +180,26 @@ public class BookingServiceImpl implements BookingService {
 
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new SeatNotAvailableException("Booking not found"));
-
+       //cancel Validation
         validateCancellationStrategies(booking, request);
+        //to check Authorized User to cancel the ticket
         authorizeUser(booking);
-
+        //finding no of seats to cancel
         Set<String> seatsToCancel = determineSeatsToCancel(booking, request);
+        //validate seat ownership
         validateSeatOwnership(booking, seatsToCancel);
+        //validate seat status and provide the refund after cancel
         validateSeatStatusAndRefunds(booking, bookingId, seatsToCancel);
-
+        //calculate total refund
         double totalRefundAmount = calculateTotalRefund(booking, seatsToCancel);
-        RefundResponse refundResponse = processRefund(bookingId, seatsToCancel);
 
+        RefundResponse refundResponse = processRefund(bookingId, seatsToCancel);
+       //count of ticket to cancel
         int cancelCount = cancelSeatsAndSaveRefunds(booking, bookingId, seatsToCancel, refundResponse);
+        //updating booking status after cancellation
         updateBookingStatus(booking);
+
+        //update the showtime no of seats have to add after cancellation
         updateShowtimeIfNeeded(booking, cancelCount, totalRefundAmount);
 
         BookingResponse response = bookingMapper.mapToBookingResponse(
@@ -216,7 +223,7 @@ public class BookingServiceImpl implements BookingService {
             throw new UnauthorizedBookingActionException("Only the user or admin can cancel");
         }
     }
-
+//if user won't pass any seat no ,then cancel all the seats
     private Set<String> determineSeatsToCancel(Booking booking, CancelSeatRequest request) {
         return (request.getSeats() == null || request.getSeats().isEmpty())
                 ? booking.getSeats().stream().map(BookingSeat::getSeatNumber).collect(Collectors.toSet())
@@ -300,7 +307,7 @@ public class BookingServiceImpl implements BookingService {
             log.info("Canceled {} seats for bookingId: {}, refund initiated for amount: {}",
                     cancelCount, booking.getId(), totalRefundAmount);
         }
-        
+
     }
 
 
