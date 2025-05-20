@@ -23,9 +23,6 @@ public class SeatController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Seats> createSeat(@Valid @RequestBody SeatRequest request) {
         log.debug("Received request to create seat type: {}", request.getTypeName());
-        if (!authService.isAdmin()) {
-            throw new IllegalStateException("Only admins can create seat types");
-        }
         Seats seat = seatsService.createSeat(request);
         return ResponseEntity.ok(seat);
     }
@@ -34,9 +31,6 @@ public class SeatController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Seats> updateSeat(@PathVariable Long id, @Valid @RequestBody SeatRequest request) {
         log.debug("Received request to update seat type with ID: {}", id);
-        if (!authService.isAdmin()) {
-            throw new IllegalStateException("Only admins can update seat types");
-        }
         Seats seat = seatsService.updateSeat(id, request);
         return ResponseEntity.ok(seat);
     }

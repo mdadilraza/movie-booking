@@ -18,10 +18,12 @@ import java.util.List;
 public class BookingController {
     private final BookingService bookingService;
 
-    @PostMapping("/showtimes")
+    @PostMapping(value = "/showtimes" )
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ShowtimeResponse> createShowtime(@Valid @RequestBody ShowtimeRequest showtimeRequest) {
-        return ResponseEntity.ok(bookingService.createShowtime(showtimeRequest));
+        ShowtimeResponse response = bookingService.createShowtime(showtimeRequest);
+        log.info("Response from createShowtime: {}", response);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping

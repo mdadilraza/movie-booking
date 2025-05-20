@@ -10,13 +10,14 @@ import com.eidiko.booking_service.entity.Showtime;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.Converter;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.PropertyMap;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
+
 
 @Component
 @RequiredArgsConstructor
@@ -39,13 +40,27 @@ public class BookingMapper {
             }
         });
 
-        // Configure mapping for BookingSeat to SeatDto
-        modelMapper.addMappings(new PropertyMap<BookingSeat, SeatDto>() {
-            @Override
-            protected void configure() {
-                map().setSeatNumber(source.getSeatNumber());
-                map().setStatus(source.getStatus());
+
+
+        Converter<BookingSeat, String> seatTypeConverter = ctx -> {
+            if (ctx.getSource().getSeats() != null && ctx.getSource().getSeats().getTypeName() != null) {
+                return ctx.getSource().getSeats().getTypeName().name();
             }
+            return null;
+        };
+
+        Converter<BookingSeat, Double> priceConverter = ctx -> {
+            if (ctx.getSource().getSeats() != null) {
+                return ctx.getSource().getSeats().getBasePrice();
+            }
+            return null;
+        };
+
+        modelMapper.typeMap(BookingSeat.class, SeatDto.class).addMappings(mapper -> {
+            mapper.map(BookingSeat::getSeatNumber, SeatDto::setSeatNumber);
+            mapper.map(BookingSeat::getStatus, SeatDto::setStatus);
+            mapper.using(seatTypeConverter).map(src -> src, SeatDto::setSeatType);
+            mapper.using(priceConverter).map(src -> src, SeatDto::setPrice);
         });
 
     }
@@ -91,7 +106,7 @@ public class BookingMapper {
         log.debug("Mapping {} BookingSeat entities to SeatDto", seats.size());
         return seats.stream()
                 .map(seat -> modelMapper.map(seat, SeatDto.class))
-                .collect(Collectors.toList());
+                .toList();
     }
 
 }
