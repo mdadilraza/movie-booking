@@ -5,7 +5,7 @@ import { Button, Card, TextField } from '@mui/material';
 
 const UserLogin = () => {
   const cardStyles = {
-    width: '400px',
+    width: '300px',
     height: 'auto',
     display: 'flex',
     flexDirection: 'column',
@@ -47,8 +47,8 @@ const UserLogin = () => {
       };
   return (
     <>
-    <form onSubmit={handleSubmit}>
-      <Card sx={cardStyles}>
+    <form onSubmit={handleSubmit} style={cardStyles}>
+     
         <h2>Login</h2>
         {formError && <p style={{ color: 'red' }}>{formError}</p>}
         {error && <p style={{ color: 'red' }}>{error}</p>}
@@ -73,7 +73,7 @@ const UserLogin = () => {
         <Button type="submit" disabled={loading}>
           {loading ? 'Logging in...' : 'Login'}
         </Button>
-      </Card>
+     
     </form>
           </>
   )
