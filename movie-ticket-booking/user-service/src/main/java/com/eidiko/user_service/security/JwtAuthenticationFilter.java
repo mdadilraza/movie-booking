@@ -1,6 +1,7 @@
 package com.eidiko.user_service.security;
 
 import com.eidiko.user_service.entity.User;
+import com.eidiko.user_service.exception.InvalidJwtException;
 import com.eidiko.user_service.exception.JwtAuthenticationException;
 import com.eidiko.user_service.util.JwtUtil;
 import jakarta.servlet.FilterChain;
@@ -45,15 +46,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }
-
-
-
-        } catch (JwtAuthenticationException ex) {
+        } catch (JwtAuthenticationException | InvalidJwtException ex) {
             logger.error("JWT Error: {}", ex);
-
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
             response.getWriter().write("{ \"error\": \"" + ex.getMessage() + "\" }");
+
         }finally {
             filterChain.doFilter(request, response);
         }

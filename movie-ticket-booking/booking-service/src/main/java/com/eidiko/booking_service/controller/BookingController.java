@@ -43,5 +43,10 @@ public class BookingController {
     public ResponseEntity<List<ShowtimeResponse>> showtimeByMovie(@PathVariable long movieId) {
         return ResponseEntity.ok(bookingService.getShowtimeByMovie(movieId));
     }
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
+    @GetMapping("/user")
+    public ResponseEntity<List<BookingResponse>> getUserBookings(){
+       return ResponseEntity.ok( bookingService.getUserBookings());
+    }
 
 }

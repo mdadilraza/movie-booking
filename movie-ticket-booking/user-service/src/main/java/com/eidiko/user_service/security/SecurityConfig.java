@@ -33,10 +33,10 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(new JwtAuthenticationEntryPoint()))
                 .authorizeHttpRequests(auth -> auth
-                        //.requestMatchers("/api/auth/**","/api/refresh/**").permitAll()
-                        //.requestMatchers("/api/users/**").authenticated()
-                        .anyRequest().permitAll()
+                        .requestMatchers("/api/auth/**","/api/refresh/**").permitAll()
+                        .requestMatchers("/api/users/**").authenticated()
                 )
                 .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class)
                 .build();
