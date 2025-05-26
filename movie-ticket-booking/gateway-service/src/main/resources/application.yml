@@ -69,6 +69,7 @@ gateway:
       - /api/auth/register
       - /api/movies/getAllMovies
       - /api/movies/id/*
+      -
 logging:
   level:
     org.springframework.security: DEBUG

@@ -3,7 +3,6 @@ import com.eidiko.user_service.exception.InvalidJwtException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.security.SignatureException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -22,7 +21,7 @@ public class JwtUtil {
     @Value("${jwt.access-token.expiration}")
     private  long ACCESS_TOKEN_EXPIRATION ;
     @Value("${jwt.refresh-token.expiration}")
-    private  long REFRESH_TOKEN_EXPIRATION ;
+    private long REFRESH_TOKEN_EXPIRATION;
 
     public String generateAccessToken(String username, String role) {
         Map<String, Object> claims = new HashMap<>();
@@ -61,7 +60,6 @@ public class JwtUtil {
         String role=   extractAllClaims(token).get("role" ,String.class);
         log.info("role -{}",role);
         return role;
-
     }
 
 
@@ -94,7 +92,7 @@ public class JwtUtil {
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-        } catch (MalformedJwtException  e) {
+        } catch (MalformedJwtException e) {
             log.error("Malformed JWT token: {}", e.getMessage());
             throw new InvalidJwtException("Malformed JWT token", e);
         }
@@ -109,8 +107,5 @@ public class JwtUtil {
             log.error("some problem in token :{}",e.getMessage());
             throw new InvalidJwtException("some problem in token", e);
         }
-
     }
-
-
 }

@@ -16,8 +16,6 @@ public class MapToResponse {
         response.setGenre(movie.getGenre());
         response.setDuration(movie.getDuration());
         response.setReleaseDate(movie.getReleaseDate());
-        response.setCreatedAt(movie.getCreatedAt());
-        response.setUpdatedAt(movie.getUpdatedAt());
         response.setActive(movie.isActive());
         response.setPosterUrl(movie.getMoviePosterUrl());
         return response;

@@ -1,4 +1,5 @@
 package com.eidiko.movie_service.service;
+import com.eidiko.movie_service.dto.MoviePageResponse;
 import com.eidiko.movie_service.dto.MovieRequest;
 import com.eidiko.movie_service.dto.MovieResponse;
 import com.eidiko.movie_service.entity.Movie;
@@ -7,11 +8,16 @@ import com.eidiko.movie_service.mapper.MapToResponse;
 import com.eidiko.movie_service.repository.MovieRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -44,12 +50,39 @@ public class MovieServiceImpl implements MovieService {
         return MapToResponse.mapToResponse(movie);
     }
 
-    @Override
-    public List<MovieResponse> getAllMovies() {
-        return movieRepository.findByIsActiveTrue()
-                .stream()
-                .map(MapToResponse::mapToResponse)
-                .toList();
+    @Transactional(readOnly = true)
+    public MoviePageResponse getAllMovies(Pageable pageable) {
+        log.info("Fetching all active movies with pageable: {}", pageable);
+       Page<Movie> moviePage = movieRepository.findByIsActiveTrue(pageable);
+
+       // Page<Movie> moviePage = movieRepository.findAll(pageable);
+        log.info("movie page  data: {}",moviePage);
+        MoviePageResponse response = new MoviePageResponse();
+        response.setMovies(moviePage.getContent().stream()
+                .map(movie -> {
+                    MovieResponse dto = new MovieResponse();
+                    dto.setId(movie.getId());
+                    dto.setTitle(movie.getTitle());
+                    dto.setPosterUrl(movie.getMoviePosterUrl());
+                    dto.setDescription(movie.getDescription());
+                    dto.setGenre(movie.getGenre());
+                    dto.setDuration(movie.getDuration());
+                    dto.setReleaseDate(movie.getReleaseDate());
+                    dto.setActive(movie.isActive());
+                    return dto;
+                })
+                .toList());
+        response.setPageNumber(moviePage.getNumber());
+        response.setPageSize(moviePage.getSize());
+        response.setTotalElements(moviePage.getTotalElements());
+        response.setTotalPages(moviePage.getTotalPages());
+        response.setFirst(moviePage.isFirst());
+        response.setLast(moviePage.isLast());
+        response.setSortField(pageable.getSort().isSorted() ? pageable.getSort().get().findFirst().get().getProperty() : null);
+        response.setSortDirection(pageable.getSort().isSorted() ? pageable.getSort().get().findFirst().get().getDirection().name().toLowerCase() : null);
+
+        log.info("Fetched {} movies for page {}", moviePage.getNumberOfElements(), pageable.getPageNumber());
+        return response;
     }
 
     @Override

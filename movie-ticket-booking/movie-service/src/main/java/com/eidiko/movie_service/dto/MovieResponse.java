@@ -11,8 +11,6 @@ public class MovieResponse {
     private String genre;
     private Integer duration;
     private String releaseDate;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
     private boolean isActive;
     private String posterUrl;
 }
