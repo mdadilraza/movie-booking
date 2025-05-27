@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 
@@ -22,6 +23,19 @@ public class GlobalExceptionHandler {
         log.warn("Handled CustomGatewayException: {}", ex.getMessage());
         return buildProblemDetail(ex.getStatus(), ex.getMessage(), BASE_ERROR_URI + "custom-error");
     }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ProblemDetail handleResponseStatusException(ResponseStatusException ex) {
+        if (ex.getStatusCode() == HttpStatus.SERVICE_UNAVAILABLE) {
+            log.warn("Downstream service returned 503: {}", ex.getMessage());
+            return buildProblemDetail(HttpStatus.SERVICE_UNAVAILABLE,
+                    "A downstream service is unavailable. Please try again later.",
+                    BASE_ERROR_URI + "service-unavailable");
+        }
+        // Let other statuses fall back to generic
+        return handleGenericException(ex);
+    }
+
 
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGenericException(Exception ex) {

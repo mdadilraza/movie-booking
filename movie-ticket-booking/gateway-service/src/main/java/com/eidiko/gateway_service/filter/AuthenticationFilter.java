@@ -14,6 +14,7 @@ import org.springframework.util.AntPathMatcher;
 import org.springframework.util.PathMatcher;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+
 import java.util.Map;
 
 @Component
@@ -22,9 +23,8 @@ import java.util.Map;
 public class AuthenticationFilter extends AbstractGatewayFilterFactory<AuthenticationFilter.Config> {
 
     private final WebClient.Builder webClientBuilder;
-    private final AuthProperties authProperties ;
+    private final AuthProperties authProperties;
     private final PathMatcher pathMatcher = new AntPathMatcher();
-
 
 
     public AuthenticationFilter(WebClient.Builder webClientBuilder, AuthProperties authProperties) {
@@ -48,7 +48,6 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                     .anyMatch(openEndpoint -> pathMatcher.match(openEndpoint, path));
 
             if (isOpenEndpoint) {
-                log.info("Open_Endpoints: {}", authProperties.getOpenEndpoints());
                 log.info("Skipping authentication for open endpoint: {}", path);
                 return chain.filter(exchange);
             }
@@ -77,7 +76,6 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                                         ));
                                     })
                     )
-
                     .bodyToMono(Map.class)
                     .flatMap(response -> {
                         String username = (String) response.get("username");
@@ -85,18 +83,25 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
 
                         log.info("Token validated successfully: user={}, role={}", username, role);
 
-                        // Mutate request with user info headers
                         ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
                                 .header("X-Auth-User", username)
                                 .header("X-Auth-Role", role)
                                 .build();
 
                         return chain.filter(exchange.mutate().request(modifiedRequest).build());
+                    })
+                    .onErrorResume(throwable -> {
+                        log.error("Exception while calling auth service", throwable);
+                        return Mono.error(new CustomGatewayException(
+                                "Authentication service is unavailable", HttpStatus.SERVICE_UNAVAILABLE
+                        ));
                     });
         };
+
     }
 
     public static class Config {
-        Config(){}
+        Config() {
+        }
     }
 }
