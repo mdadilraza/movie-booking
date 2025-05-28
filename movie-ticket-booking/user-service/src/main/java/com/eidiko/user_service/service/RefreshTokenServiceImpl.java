@@ -37,7 +37,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService{
         refreshToken.setUser(user);
         refreshToken.setToken(jwtUtil.generateRefreshToken(user.getUsername()));
         refreshToken.setExpiryDate(jwtUtil.getExpirationDateFromToken(refreshToken.getToken()));
-        log.info("refreshToken in createRefreshToken {}" ,refreshToken);
+        log.info("refreshToken in createRefreshToken {}" ,refreshToken.getUser().getUsername());
         return refreshTokenRepository.save(refreshToken);
     }
 

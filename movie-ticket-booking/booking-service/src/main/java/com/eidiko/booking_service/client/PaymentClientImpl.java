@@ -26,15 +26,23 @@ public class PaymentClientImpl implements PaymentClient {
     @Override
     public PaymentResponse createPayment(PaymentRequest request) {
         try {
-            return webClient
-                    .post()
+            return webClient.post()
                     .uri("/api/payments")
                     .header("Authorization", "Bearer " + tokenService.extractToken())
                     .bodyValue(request)
-                    .retrieve()
-                    .bodyToMono(PaymentResponse.class)
+                    .exchangeToMono(response -> {
+                        if (response.statusCode().is2xxSuccessful()) {
+                            return response.bodyToMono(PaymentResponse.class);
+                        } else {
+                            return response.bodyToMono(String.class)
+                                    .flatMap(body -> {
+                                        log.error("Payment service returned status {} with body {}", response.statusCode(), body);
+                                        return Mono.error(new RuntimeException("Payment service error"));
+                                    });
+                        }
+                    })
                     .onErrorResume(ex -> {
-                        log.error("Fallback: Payment service is unavailable. Reason: {}", ex.getMessage());
+                        log.error("Fallback: Payment service is unavailable.", ex);
                         return Mono.just(PaymentResponse.builder()
                                 .bookingId(request.getBookingId())
                                 .amount(request.getAmount())
@@ -43,6 +51,7 @@ public class PaymentClientImpl implements PaymentClient {
                                 .build());
                     })
                     .block();
+
         } catch (Exception e) {
             log.error("Exception occurred during payment creation: {}", e.getMessage());
             return PaymentResponse.builder()

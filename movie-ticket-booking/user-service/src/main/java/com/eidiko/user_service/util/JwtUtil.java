@@ -6,6 +6,7 @@ import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import io.jsonwebtoken.security.SignatureException;
 
 import java.security.Key;
 import java.time.Instant;
@@ -51,15 +52,13 @@ public class JwtUtil {
 
     public String extractUsername(String token) {
 
-      String userName=   extractAllClaims(token).getSubject();
-   log.info("username -{}",userName);
-   return userName;
+        return extractAllClaims(token).getSubject();
+
     }
 
     public String extractRole(String token) {
-        String role=   extractAllClaims(token).get("role" ,String.class);
-        log.info("role -{}",role);
-        return role;
+
+        return extractAllClaims(token).get("role" ,String.class);
     }
 
 
@@ -67,9 +66,7 @@ public class JwtUtil {
     validateToken(String token)  {
         boolean result = false;
         try {
-            log.info("Validating token {} " ,token);
-            Claims claims = extractAllClaims(token);
-           log.info("Claims {}" , claims);
+             extractAllClaims(token);
             result = true;
         } catch (io.jsonwebtoken.ExpiredJwtException e) {
             log.error("Token expired {}" , e.getMessage());

@@ -86,8 +86,11 @@ public class BookingServiceImpl implements BookingService {
 
         // Check for booked seats
         List<BookingSeat> existingSeats = bookingSeatRepository
-                .findBookedSeatsByShowtimeIdAndSeatNumbers(request.getShowtimeId(), request.getSeatNumbers());
-        if (!existingSeats.isEmpty()) {
+                .findBookedSeatsByShowtimeIdAndSeatNumbers(request.getShowtimeId(), request.getSeatNumbers())
+                .stream()
+                .filter(seat -> seat.getStatus().equals(BookingStatus.CONFIRMED))
+                .toList();
+        if (!existingSeats.isEmpty() ) {
             Set<String> bookedSeats = existingSeats.stream()
                     .map(BookingSeat::getSeatNumber)
                     .collect(Collectors.toSet());
@@ -145,8 +148,9 @@ public class BookingServiceImpl implements BookingService {
         paymentRequest.setBookingId(bookingSaved.getId());
         paymentRequest.setAmount(totalPrice);
         paymentRequest.setNumberOfSeats(seatEntities.size());
+        log.info("calling createPayment api");
         PaymentResponse paymentResponse = paymentClient.createPayment(paymentRequest);
-
+       log.info("created payment with transactionId: {}",paymentResponse.getTransactionId());
         // Update showtime
         showtime.setAvailableSeats(showtime.getAvailableSeats() - seatEntities.size());
         showtimeRepository.save(showtime);
