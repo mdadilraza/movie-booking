@@ -1,8 +1,8 @@
 package com.eidiko.movie_service.controller;
+
 import com.eidiko.movie_service.dto.MoviePageResponse;
 import com.eidiko.movie_service.dto.MovieRequest;
 import com.eidiko.movie_service.dto.MovieResponse;
-import com.eidiko.movie_service.repository.MovieRepository;
 import com.eidiko.movie_service.service.MovieService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,8 +14,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
+
 import java.io.IOException;
 import java.util.Set;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/movies")
@@ -25,24 +28,18 @@ public class MovieController {
             Set.of("title", "genre", "releaseDate", "duration");
 
     private final MovieService movieService;
-    private final MovieRepository movieRepository;
 
-    @PostMapping(value = "/addMovie" ,consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/addMovie", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<MovieResponse> addMovie(@ModelAttribute MovieRequest request
-    ) throws IOException {
-
-            MovieResponse response = movieService.createMovie(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-
+    public ResponseEntity<MovieResponse> addMovie(@ModelAttribute MovieRequest request) throws IOException {
+        MovieResponse response = movieService.createMovie(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/id/{id}")
     public ResponseEntity<MovieResponse> getMovieById(@PathVariable Long id) {
-
-            MovieResponse response = movieService.getMovieById(id);
-            return ResponseEntity.ok(response);
-
+        MovieResponse response = movieService.getMovieById(id);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/getAllMovies")
@@ -75,19 +72,20 @@ public class MovieController {
             @PathVariable Long id,
             @RequestBody MovieRequest request
     ) {
-
-            MovieResponse response = movieService.updateMovie(id, request);
-            return ResponseEntity.ok(response);
-
+        MovieResponse response = movieService.updateMovie(id, request);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteMovie(@PathVariable Long id) {
-
-            movieService.deleteMovie(id);
-            return ResponseEntity.noContent().build();
-
+        movieService.deleteMovie(id);
+        return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/fallback/movies/{id}")
+    public Mono<MovieResponse> getCachedMovie(@PathVariable Long id) {
+        return Mono.just(movieService.getMovieById(id))
+                .onErrorResume(e -> Mono.empty()); // return empty or cached stale if any
+    }
 }
