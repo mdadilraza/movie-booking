@@ -16,6 +16,12 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  cache:
+    type: caffeine
+
+  caffeine:
+    spec: maximumSize=500,expireAfterWrite=5m
+
 eureka:
   client:
     serviceUrl:

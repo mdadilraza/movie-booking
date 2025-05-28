@@ -38,10 +38,7 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
         return (exchange, chain) -> {
             ServerHttpRequest request = exchange.getRequest();
             String path = request.getPath().toString();
-            request.getHeaders().forEach((name, values) ->
-                    log.info("Header '{}': {}", name, values));
 
-            log.info("Incoming request path: {}", path);
 
             // Bypass token validation for open endpoints
             boolean isOpenEndpoint = authProperties.getOpenEndpoints().stream()

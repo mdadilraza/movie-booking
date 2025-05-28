@@ -122,6 +122,10 @@ public class GlobalExceptionHandler {
         LOGGER.error("Unexpected error", ex);
         return createProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Error", "An unexpected error occurred.", BASE_URI + "internal-error");
     }
+    @ExceptionHandler(SeatAlreadyBookedException.class)
+    public ProblemDetail handleSeatAlreadyBookedException(SeatAlreadyBookedException ex) {
+        return createProblemDetail(HttpStatus.CONFLICT, "Seat Already Booked" , ex.getMessage(), BASE_URI + "seat-already-booked");
+    }
 
     private ProblemDetail createProblemDetail(HttpStatus status, String title, String detail, String typeUri) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(status, detail);

@@ -6,10 +6,7 @@ import com.eidiko.booking_service.client.PaymentClient;
 import com.eidiko.booking_service.constants.BookingStatus;
 import com.eidiko.booking_service.dto.*;
 import com.eidiko.booking_service.entity.*;
-import com.eidiko.booking_service.exception.SeatNotAvailableException;
-import com.eidiko.booking_service.exception.ShowtimeNotFoundException;
-import com.eidiko.booking_service.exception.UnauthorizedBookingActionException;
-import com.eidiko.booking_service.exception.UserNotFoundException;
+import com.eidiko.booking_service.exception.*;
 import com.eidiko.booking_service.mapper.BookingMapper;
 import com.eidiko.booking_service.repository.*;
 import com.eidiko.booking_service.strategy.factory.CancellationValidationStrategyFactory;
@@ -95,7 +92,7 @@ public class BookingServiceImpl implements BookingService {
                     .map(BookingSeat::getSeatNumber)
                     .collect(Collectors.toSet());
             log.warn("Seats already booked for showtimeId: {}: {}", request.getShowtimeId(), bookedSeats);
-            throw new SeatNotAvailableException("Seats already booked: " + bookedSeats);
+            throw new SeatAlreadyBookedException("Seats already booked: " + bookedSeats);
         }
         // Validate seat types
         Map<String, Long> seatTypes = request.getSeatTypes();
