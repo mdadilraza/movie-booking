@@ -1,0 +1,12 @@
+.homeContainer{
+    background-color: #1c2b3a;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+.header{
+    font-size: 14px;
+    font-weight: 600;
+    color: white;
+    text-decoration-line: none;
+}
