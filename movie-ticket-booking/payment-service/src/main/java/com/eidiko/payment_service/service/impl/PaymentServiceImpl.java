@@ -61,13 +61,15 @@ public class PaymentServiceImpl implements PaymentService {
 
         Payment payment = paymentRepository.findByBookingId(request.getBookingId());
         Map<String, Double> seatRefunds = getSeatRefunds(request, payment);
-
+       log.info("seatRefunds {}",seatRefunds);
         RefundResponse response = new RefundResponse();
         response.setBookingId(request.getBookingId());
         response.setSeatRefunds(seatRefunds);
         response.setStatus("INITIATED");
         response.setTransactionId(UUID.randomUUID().toString());
-        log.info("Refund initiated for bookingId: {}", request.getBookingId());
+        log.info("Refund initiated for bookingId: {} ",
+                request.getBookingId());
+        log.info("response :{}",response);
         return response;
     }
 
@@ -84,6 +86,7 @@ public class PaymentServiceImpl implements PaymentService {
         Map<String, Double> seatRefunds = new HashMap<>();
         for (String seatNumber : request.getSeatNumbers()) {
             double refundAmount = ticketPrice * (1 - Constants.CANCELLATION_CHARGE);
+            log.info("refundAmount :{}",refundAmount);
             seatRefunds.put(seatNumber, refundAmount);
         }
         return seatRefunds;

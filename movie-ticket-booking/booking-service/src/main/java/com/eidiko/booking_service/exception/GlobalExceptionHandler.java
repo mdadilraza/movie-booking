@@ -126,6 +126,24 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleSeatAlreadyBookedException(SeatAlreadyBookedException ex) {
         return createProblemDetail(HttpStatus.CONFLICT, "Seat Already Booked" , ex.getMessage(), BASE_URI + "seat-already-booked");
     }
+    @ExceptionHandler(PaymentDeclinedException.class)
+    public ProblemDetail handlePaymentDeclined(PaymentDeclinedException ex) {
+        return createProblemDetail(
+                HttpStatus.PAYMENT_REQUIRED,
+                "Payment Declined",
+                ex.getMessage(),
+                BASE_URI + "payment-declined"
+        );
+    }
+    @ExceptionHandler(RefundDeclinedException.class)
+    public ProblemDetail handleRefundDeclineException(RefundDeclinedException ex) {
+        return createProblemDetail(
+                HttpStatus.CONFLICT,
+                "Payment Declined",
+                ex.getMessage(),
+                BASE_URI + "payment-declined"
+        );
+    }
 
     private ProblemDetail createProblemDetail(HttpStatus status, String title, String detail, String typeUri) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(status, detail);

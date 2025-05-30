@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Map;
@@ -90,13 +91,14 @@ public class BookingServiceImpl implements BookingService {
                 .stream()
                 .filter(seat -> seat.getStatus().equals(BookingStatus.CONFIRMED))
                 .toList();
-        if (!existingSeats.isEmpty() ) {
+        if (!existingSeats.isEmpty()) {
             Set<String> bookedSeats = existingSeats.stream()
                     .map(BookingSeat::getSeatNumber)
                     .collect(Collectors.toSet());
             log.warn("Seats already booked for showtimeId: {}: {}", request.getShowtimeId(), bookedSeats);
             throw new SeatAlreadyBookedException("Seats already booked: " + bookedSeats);
         }
+
         // Validate seat types
         Map<String, Long> seatTypes = request.getSeatTypes();
         if (!seatTypes.keySet().containsAll(request.getSeatNumbers()) || seatTypes.size() != request.getSeatNumbers().size()) {
@@ -132,7 +134,6 @@ public class BookingServiceImpl implements BookingService {
             return seatEntity;
         }).collect(Collectors.toSet());
 
-        // Calculate total price
         for (BookingSeat seat : seatEntities) {
             totalPrice += seat.getSeats().getBasePrice();
         }
@@ -148,17 +149,37 @@ public class BookingServiceImpl implements BookingService {
         paymentRequest.setBookingId(bookingSaved.getId());
         paymentRequest.setAmount(totalPrice);
         paymentRequest.setNumberOfSeats(seatEntities.size());
-        log.info("calling createPayment api");
-        PaymentResponse paymentResponse = paymentClient.createPayment(paymentRequest);
-       log.info("created payment with transactionId: {}",paymentResponse.getTransactionId());
-        // Update showtime
-        showtime.setAvailableSeats(showtime.getAvailableSeats() - seatEntities.size());
-        showtimeRepository.save(showtime);
 
-        log.info("Created booking with ID: {} for showtimeId: {}, totalPrice: {}",
-                bookingSaved.getId(), request.getShowtimeId(), totalPrice);
-        return bookingMapper.mapToBookingResponse(bookingSaved, paymentResponse);
+        try {
+            log.info("Calling createPayment API");
+            PaymentResponse paymentResponse = paymentClient.createPayment(paymentRequest);
+            log.info("Created payment with transactionId: {}", paymentResponse.getTransactionId());
+
+            showtime.setAvailableSeats(showtime.getAvailableSeats() - seatEntities.size());
+            showtimeRepository.save(showtime);
+
+            log.info("Created booking with ID: {} for showtimeId: {}, totalPrice: {}",
+                    bookingSaved.getId(), request.getShowtimeId(), totalPrice);
+            return bookingMapper.mapToBookingResponse(bookingSaved, paymentResponse);
+
+        } catch (Exception ex) {
+            log.error("Payment failed for bookingId: {}. Rolling back booking and releasing seats.", bookingSaved.getId());
+
+            // Compensation logic: cancel the booking and its seats
+            bookingSaved.setStatus(BookingStatus.CANCELED);
+            bookingSaved.getSeats().forEach(seat -> seat.setStatus(BookingStatus.CANCELED));
+            bookingRepository.save(bookingSaved);
+
+            // Release seats in showtime
+            showtime.setAvailableSeats(showtime.getAvailableSeats() + seatEntities.size());
+            showtimeRepository.save(showtime);
+
+            log.info("Booking {} marked as CANCELED and seats released", bookingSaved.getId());
+
+            throw new PaymentDeclinedException("Payment failed: " + ex.getMessage());
+        }
     }
+
 
     @Override
     public List<BookingResponse> getUserBookings() {

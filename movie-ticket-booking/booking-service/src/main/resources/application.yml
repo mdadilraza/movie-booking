@@ -26,3 +26,37 @@ eureka:
   client:
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
+resilience4j:
+  circuitbreaker:
+    instances:
+      paymentServiceCircuitBreaker:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        slowCallRateThreshold: 60
+        slowCallDurationThreshold: 20s
+        permittedNumberOfCallsInHalfOpenState: 3
+        waitDurationInOpenState: 15s
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        registerHealthIndicator: true
+        ignoreExceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - org.springframework.web.client.HttpServerErrorException
+
+  timelimiter:
+    instances:
+      paymentServiceCircuitBreaker:
+       timeoutDuration: 30s
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,circuitbreakers
+logging:
+  level:
+    io.github.resilience4j.circuitbreaker: DEBUG
+
+
+
