@@ -41,7 +41,7 @@ spring:
             - name: Retry
               args:
                 retries: 3
-                statuses: BAD_GATEWAY, SERVICE_UNAVAILABLE
+                statuses: BAD_GATEWAY, SERVICE_UNAVAILABLE, GATEWAY_TIMEOUT
                 methods: GET, POST
 
         # Movie_Service
@@ -60,7 +60,7 @@ spring:
             - name: Retry
               args:
                 retries: 3
-                statuses: BAD_GATEWAY, SERVICE_UNAVAILABLE
+                statuses: BAD_GATEWAY, SERVICE_UNAVAILABLE, GATEWAY_TIMEOUT
                 methods: GET, POST
 
         # Booking_Service
@@ -79,7 +79,7 @@ spring:
             - name: Retry
               args:
                 retries: 3
-                statuses: BAD_GATEWAY, SERVICE_UNAVAILABLE
+                statuses: BAD_GATEWAY, SERVICE_UNAVAILABLE, GATEWAY_TIMEOUT
                 methods: GET, POST
 
         # Payment_Service
@@ -98,7 +98,7 @@ spring:
             - name: Retry
               args:
                 retries: 3
-                statuses: BAD_GATEWAY, SERVICE_UNAVAILABLE
+                statuses: BAD_GATEWAY, SERVICE_UNAVAILABLE, GATEWAY_TIMEOUT
                 methods: GET, POST
 
   security:
@@ -130,7 +130,7 @@ resilience4j:
         minimumNumberOfCalls: 5
         failureRateThreshold: 50
         slowCallRateThreshold: 60
-        slowCallDurationThreshold: 10s
+        slowCallDurationThreshold: 20s
         permittedNumberOfCallsInHalfOpenState: 3
         waitDurationInOpenState: 15s
         automaticTransitionFromOpenToHalfOpenEnabled: true
@@ -146,7 +146,7 @@ resilience4j:
         minimumNumberOfCalls: 5
         failureRateThreshold: 50
         slowCallRateThreshold: 60
-        slowCallDurationThreshold: 10s
+        slowCallDurationThreshold: 20s
         permittedNumberOfCallsInHalfOpenState: 3
         waitDurationInOpenState: 15s
         automaticTransitionFromOpenToHalfOpenEnabled: true
@@ -178,7 +178,7 @@ resilience4j:
         minimumNumberOfCalls: 5
         failureRateThreshold: 50
         slowCallRateThreshold: 60
-        slowCallDurationThreshold: 10s
+        slowCallDurationThreshold: 20s
         permittedNumberOfCallsInHalfOpenState: 3
         waitDurationInOpenState: 15s
         automaticTransitionFromOpenToHalfOpenEnabled: true
@@ -191,10 +191,15 @@ resilience4j:
   timelimiter:
     instances:
       userServiceCircuitBreaker:
-        timeoutDuration: 10s
+        timeoutDuration: 30s
       movieServiceCircuitBreaker:
-        timeoutDuration: 10s
+        timeoutDuration: 30s
       bookingServiceCircuitBreaker:
-        timeoutDuration: 10s
+        timeoutDuration: 30s
       paymentServiceCircuitBreaker:
-        timeoutDuration: 10s
+        timeoutDuration: 30s
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,circuitbreakers

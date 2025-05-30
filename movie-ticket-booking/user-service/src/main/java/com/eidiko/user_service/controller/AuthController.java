@@ -43,9 +43,7 @@ public class AuthController {
 
     @PostMapping("/validate")
     public ResponseEntity<Map<String, String>> validateToken(@RequestBody Map<String, String> request) {
-        log.info("inside validate api");
         Map<String, String> response = userService.validateToken(request.get("token"));
-        log.info("response -{}", response.get("role"));
         return ResponseEntity.ok(response);
 
     }

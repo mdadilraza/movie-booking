@@ -38,7 +38,10 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
         return (exchange, chain) -> {
             ServerHttpRequest request = exchange.getRequest();
             String path = request.getPath().toString();
+            request.getHeaders().forEach((name, values) ->
+                    log.info("Header '{}': {}", name, values));
 
+            log.info("Incoming request path: {}", path);
 
             // Bypass token validation for open endpoints
             boolean isOpenEndpoint = authProperties.getOpenEndpoints().stream()
@@ -63,36 +66,38 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                     .post()
                     .uri("http://localhost:8081/api/auth/validate")
                     .bodyValue(Map.of("token", token))
-                    .retrieve()
-                    .onStatus(HttpStatusCode::isError, clientResponse ->
-                            clientResponse.bodyToMono(String.class)
+                    .exchangeToMono(response -> {
+                        if (response.statusCode().is2xxSuccessful()) {
+                            return response.bodyToMono(Map.class).flatMap(res -> {
+                                String username = (String) res.get("username");
+                                String role = (String) res.get("role");
+
+                                log.info("Token validated successfully: user={}, role={}", username, role);
+
+                                ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
+                                        .header("X-Auth-User", username)
+                                        .header("X-Auth-Role", role)
+                                        .build();
+
+                                return chain.filter(exchange.mutate().request(modifiedRequest).build());
+                            });
+                        } else if (response.statusCode().value() == 401 || response.statusCode().value() == 403) {
+                            return response.bodyToMono(String.class)
                                     .flatMap(errorBody -> {
-                                        log.error("Auth service responded with error: {}", errorBody);
+                                        log.error("Token validation failed: {}", errorBody);
                                         return Mono.error(new CustomGatewayException(
-                                                "Token validation failed from auth service", HttpStatus.UNAUTHORIZED
-                                        ));
-                                    })
-                    )
-                    .bodyToMono(Map.class)
-                    .flatMap(response -> {
-                        String username = (String) response.get("username");
-                        String role = (String) response.get("role");
-
-                        log.info("Token validated successfully: user={}, role={}", username, role);
-
-                        ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
-                                .header("X-Auth-User", username)
-                                .header("X-Auth-Role", role)
-                                .build();
-
-                        return chain.filter(exchange.mutate().request(modifiedRequest).build());
-                    })
-                    .onErrorResume(throwable -> {
-                        log.error("Exception while calling auth service", throwable);
-                        return Mono.error(new CustomGatewayException(
-                                "Authentication service is unavailable", HttpStatus.SERVICE_UNAVAILABLE
-                        ));
+                                                "Invalid or expired token", HttpStatus.UNAUTHORIZED));
+                                    });
+                        } else {
+                            return response.bodyToMono(String.class)
+                                    .flatMap(errorBody -> {
+                                        log.error("Unexpected error from auth service: {}", errorBody);
+                                        return Mono.error(new CustomGatewayException(
+                                                "Authentication service error", HttpStatus.INTERNAL_SERVER_ERROR));
+                                    });
+                        }
                     });
+
         };
 
     }
