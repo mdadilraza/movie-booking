@@ -9,10 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -29,5 +26,10 @@ public class PaymentController {
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<RefundResponse> createRefund(@Valid @RequestBody RefundRequest refundRequest){
    return ResponseEntity.ok(paymentService.processRefund(refundRequest));
+    }
+    @PostMapping("/payment/refund/{bookingId}")
+    public ResponseEntity<String> refundPayment(@Valid @PathVariable Long bookingId) {
+        paymentService.refundPaymentByBookingId(bookingId);
+        return ResponseEntity.ok("Refund successful for booking ID: " + bookingId);
     }
 }

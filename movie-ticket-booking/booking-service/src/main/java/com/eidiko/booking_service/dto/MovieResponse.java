@@ -1,10 +1,13 @@
 package com.eidiko.booking_service.dto;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
-public class MovieResponse {
+@NoArgsConstructor
+public class MovieResponse implements Serializable {
     private Long id;
     private String title;
     private String description;

@@ -16,12 +16,6 @@ spring:
     properties:
       hibernate:
         format_sql: true
-  cache:
-    type: caffeine
-
-  caffeine:
-    spec: maximumSize=500,expireAfterWrite=5m
-
 eureka:
   client:
     serviceUrl:
@@ -57,6 +51,7 @@ management:
 logging:
   level:
     io.github.resilience4j.circuitbreaker: DEBUG
+
 
 
 
