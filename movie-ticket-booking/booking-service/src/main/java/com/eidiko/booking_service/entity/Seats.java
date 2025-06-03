@@ -6,7 +6,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "SEATS", schema = "ORDER_DB")
+@Table(name = "SEATS", schema = "ORDER_DB", indexes = {
+        @Index(name = "idx_typeName", columnList = "typeName")
+})
 @Getter
 @Setter
 @NoArgsConstructor
