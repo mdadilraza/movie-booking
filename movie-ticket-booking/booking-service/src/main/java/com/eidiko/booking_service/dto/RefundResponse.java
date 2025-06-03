@@ -11,4 +11,5 @@ public class RefundResponse {
     private Map<String, Double> seatRefunds;
     private String status;
     private String transactionId;
+    private double refundedAmount;
 }

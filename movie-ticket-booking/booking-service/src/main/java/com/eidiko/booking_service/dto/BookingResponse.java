@@ -15,7 +15,7 @@ public class BookingResponse {
     private Long paymentId;
     private String paymentStatus;
     private String transactionId;
-    private Double paymentAmount;
+
 
 
 

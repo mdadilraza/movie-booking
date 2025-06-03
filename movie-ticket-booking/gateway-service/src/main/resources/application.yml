@@ -191,11 +191,11 @@ resilience4j:
   timelimiter:
     instances:
       userServiceCircuitBreaker:
-        timeoutDuration: 30s
+        timeoutDuration: 50s
       movieServiceCircuitBreaker:
         timeoutDuration: 30s
       bookingServiceCircuitBreaker:
-        timeoutDuration: 30s
+        timeoutDuration: 60s
       paymentServiceCircuitBreaker:
         timeoutDuration: 30s
 management:

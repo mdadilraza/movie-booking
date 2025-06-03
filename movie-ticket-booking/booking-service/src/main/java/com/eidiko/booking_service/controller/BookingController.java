@@ -1,5 +1,6 @@
 package com.eidiko.booking_service.controller;
 
+import com.eidiko.booking_service.client.MovieClientImpl;
 import com.eidiko.booking_service.dto.*;
 import com.eidiko.booking_service.service.BookingService;
 import jakarta.validation.Valid;
@@ -48,5 +49,14 @@ public class BookingController {
     public ResponseEntity<List<BookingResponse>> getUserBookings(){
        return ResponseEntity.ok( bookingService.getUserBookings());
     }
+
+    private final MovieClientImpl movieClient;
+    @GetMapping("/test")
+    public ResponseEntity<String> testMovieCache() {
+        log.info("testing movie cache");
+        movieClient.validateMovie(1L); // this internally calls getSelf().cacheMovie()
+        return ResponseEntity.ok("Movie validated");
+    }
+
 
 }

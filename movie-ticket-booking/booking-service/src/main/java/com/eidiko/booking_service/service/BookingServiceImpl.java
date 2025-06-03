@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import reactor.core.publisher.Mono;
+
 
 import java.util.List;
 import java.util.Map;
@@ -175,7 +175,14 @@ public class BookingServiceImpl implements BookingService {
             showtimeRepository.save(showtime);
 
             log.info("Booking {} marked as CANCELED and seats released", bookingSaved.getId());
+            try {
+                log.info("Attempting refund for bookingId: {}", bookingSaved.getId());
+                RefundResponse refundResponse = paymentClient.refundPaymentByBookingId(bookingSaved.getId());
+                log.info("Refund issued successfully for bookingId: {}", refundResponse.getBookingId());
 
+            } catch (Exception refundEx) {
+                log.error("Refund failed for bookingId: {}. Manual intervention may be required.", bookingSaved.getId());
+            }
             throw new PaymentDeclinedException("Payment failed: " + ex.getMessage());
         }
     }
@@ -229,7 +236,7 @@ public class BookingServiceImpl implements BookingService {
                 cancelCount > 0 ? "INITIATED" : null,
                 totalRefundAmount
         );
-
+      response.setRefundAmount(refundResponse.getRefundedAmount());
         return List.of(response);
     }
     private void validateCancellationStrategies(Booking booking, CancelSeatRequest request) {

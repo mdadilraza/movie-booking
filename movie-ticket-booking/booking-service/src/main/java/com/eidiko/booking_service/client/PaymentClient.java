@@ -9,4 +9,6 @@ import com.eidiko.booking_service.dto.RefundResponse;
 public interface PaymentClient {
     PaymentResponse createPayment(PaymentRequest request);
     RefundResponse processRefund(RefundRequest request);
+
+    RefundResponse refundPaymentByBookingId(Long id);
 }

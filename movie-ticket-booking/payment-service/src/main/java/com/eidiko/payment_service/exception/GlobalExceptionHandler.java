@@ -20,26 +20,33 @@ import java.util.Map;
 public class GlobalExceptionHandler {
     private static final String BASE_ERROR_URI = "https://api.eidiko.com/payment-service/errors/";
 
-    @ExceptionHandler(PaymentException.class)
-    public ProblemDetail handlePaymentException(PaymentException ex) {
-        log.warn("Payment error: {}", ex.getMessage());
+    @ExceptionHandler(PaymentAlreadyExistException.class)
+    public ProblemDetail handlePaymentException(PaymentAlreadyExistException ex) {
+        log.warn("Payment Already Exists: {}", ex.getMessage());
         HttpStatus status;
         String title;
         String typeUri;
 
-        if (ex.getMessage().contains("already exists")) {
+
             status = HttpStatus.CONFLICT;
             title = "Payment Already Exists";
             typeUri = BASE_ERROR_URI + "payment-already-exists";
-        } else if (ex.getMessage().contains("not found")) {
-            status = HttpStatus.NOT_FOUND;
-            title = "Payment Not Found";
-            typeUri = BASE_ERROR_URI + "payment-not-found";
-        } else {
-            status = HttpStatus.BAD_REQUEST;
-            title = "Payment Error";
-            typeUri = BASE_ERROR_URI + "payment-error";
-        }
+
+
+        return createProblemDetail(status, title, ex.getMessage(), typeUri);
+    }
+    @ExceptionHandler(PaymentNotFoundException.class)
+    public ProblemDetail handlePaymentNotFoundException(PaymentNotFoundException ex) {
+        log.warn("Payment not found : {}", ex.getMessage());
+        HttpStatus status;
+        String title;
+        String typeUri;
+
+
+        status = HttpStatus.NOT_FOUND;
+        title = "Payment Not Found";
+        typeUri = BASE_ERROR_URI + "payment-not-found";
+
 
         return createProblemDetail(status, title, ex.getMessage(), typeUri);
     }

@@ -82,7 +82,7 @@ public class BookingMapper {
         response.setPaymentId(paymentResponse.getId());
         response.setPaymentStatus(paymentResponse.getStatus());
         response.setTransactionId(paymentResponse.getTransactionId());
-        response.setPaymentAmount(paymentResponse.getAmount());
+        response.setRefundAmount(paymentResponse.getAmount());
         response.setRefundStatus(null);
         response.setRefundAmount(null);
         return response;
@@ -96,7 +96,7 @@ public class BookingMapper {
         response.setPaymentId(0L); // Default for cancelSeats
         response.setPaymentStatus(null); // Default for cancelSeats
         response.setTransactionId(null); // Default for cancelSeats
-        response.setPaymentAmount(0.0); // Default for cancelSeats
+        response.setRefundAmount(0.0); // Default for cancelSeats
         response.setRefundStatus(refundStatus);
         response.setRefundAmount(refundAmount);
         return response;

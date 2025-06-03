@@ -1,12 +1,14 @@
 package com.eidiko.payment_service.service.impl;
 
 import com.eidiko.payment_service.constants.Constants;
+import com.eidiko.payment_service.constants.PaymentStatus;
 import com.eidiko.payment_service.dto.PaymentRequest;
 import com.eidiko.payment_service.dto.PaymentResponse;
 import com.eidiko.payment_service.dto.RefundRequest;
 import com.eidiko.payment_service.dto.RefundResponse;
 import com.eidiko.payment_service.entity.Payment;
-import com.eidiko.payment_service.exception.PaymentException;
+import com.eidiko.payment_service.exception.PaymentAlreadyExistException;
+import com.eidiko.payment_service.exception.PaymentNotFoundException;
 import com.eidiko.payment_service.repository.PaymentRepository;
 import com.eidiko.payment_service.service.PaymentService;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -30,9 +33,10 @@ public class PaymentServiceImpl implements PaymentService {
         log.info("Creating payment for bookingId: {}, amount: {}, seats: {}",
                 request.getBookingId(), request.getAmount(), request.getNumberOfSeats());
 
-        Payment existingPayment = paymentRepository.findByBookingId(request.getBookingId());
+        Payment existingPayment = paymentRepository.findByBookingId(request.getBookingId())
+                .orElse(null);
         if (existingPayment != null) {
-            throw new PaymentException("Payment already exists for bookingId: " + request.getBookingId());
+            throw new PaymentAlreadyExistException("Payment already exists for bookingId: " + request.getBookingId());
         }
 
         Payment payment = new Payment();
@@ -59,14 +63,17 @@ public class PaymentServiceImpl implements PaymentService {
     public RefundResponse processRefund(RefundRequest request) {
         log.info("Processing refund for bookingId: {}, seats: {}", request.getBookingId(), request.getSeatNumbers());
 
-        Payment payment = paymentRepository.findByBookingId(request.getBookingId());
+        Payment payment = paymentRepository.findByBookingId(request.getBookingId())
+                .orElseThrow(() -> new PaymentAlreadyExistException("Payment Not Found for booking Id "+ request.getBookingId()));
         Map<String, Double> seatRefunds = getSeatRefunds(request, payment);
        log.info("seatRefunds {}",seatRefunds);
         RefundResponse response = new RefundResponse();
         response.setBookingId(request.getBookingId());
         response.setSeatRefunds(seatRefunds);
-        response.setStatus("INITIATED");
+        response.setStatus(PaymentStatus.INITIATED.name());
         response.setTransactionId(UUID.randomUUID().toString());
+        response.setRefundedAmount(seatRefunds.values()
+                .stream().mapToDouble(Double::doubleValue).sum());
         log.info("Refund initiated for bookingId: {} ",
                 request.getBookingId());
         log.info("response :{}",response);
@@ -75,11 +82,11 @@ public class PaymentServiceImpl implements PaymentService {
 
     private static Map<String, Double> getSeatRefunds(RefundRequest request, Payment payment) {
         if (payment == null) {
-            throw new PaymentException("No payment found for bookingId: " + request.getBookingId());
+            throw new PaymentNotFoundException("No payment found for bookingId: " + request.getBookingId());
         }
 
         if (payment.getNumberOfSeats() == 0) {
-            throw new PaymentException("Invalid number of seats for bookingId: " + request.getBookingId());
+            throw new PaymentAlreadyExistException("Invalid number of seats for bookingId: " + request.getBookingId());
         }
 
         double ticketPrice = payment.getAmount() / payment.getNumberOfSeats(); // Price per seat
@@ -90,5 +97,22 @@ public class PaymentServiceImpl implements PaymentService {
             seatRefunds.put(seatNumber, refundAmount);
         }
         return seatRefunds;
+    }
+    @Override
+    public RefundResponse refundPaymentByBookingId(Long bookingId) {
+        Payment payment = paymentRepository.findByBookingId(bookingId)
+                .orElseThrow(() -> new PaymentNotFoundException("Payment not found for bookingId: " + bookingId));
+
+        // Here you'd integrate with your payment gateway to initiate refund using payment.getTransactionId() etc.
+        payment.setStatus(PaymentStatus.REFUNDED.name()); // Enum you define
+        paymentRepository.save(payment);
+
+        RefundResponse refundResponse = new RefundResponse();
+        refundResponse.setBookingId(bookingId);
+        refundResponse.setTransactionId(payment.getTransactionId());
+        refundResponse.setStatus(payment.getStatus());
+        refundResponse.setRefundedAmount(payment.getAmount());
+
+        return refundResponse;
     }
 }
