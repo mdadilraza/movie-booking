@@ -8,7 +8,9 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 @Entity
-@Table(name = "movies")
+@Table(name = "movies",indexes = {
+        @Index(name = "idx_title",columnList = "title")
+})
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

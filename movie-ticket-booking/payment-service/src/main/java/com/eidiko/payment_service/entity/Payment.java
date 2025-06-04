@@ -12,7 +12,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-@Table(name ="payments",schema = "PAYMENT_DB")
+@Table(name ="payments",schema = "PAYMENT_DB",indexes = {
+        @Index(name = "idx_booking_id",columnList = "booking_id")
+})
 public class Payment {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "payment_seq")

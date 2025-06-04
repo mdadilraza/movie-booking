@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -28,7 +29,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
+    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) throws ExecutionException, InterruptedException {
         AuthResponse response = userService.login(request);
         return ResponseEntity.ok(response);
 
@@ -42,7 +43,7 @@ public class AuthController {
     }
 
     @PostMapping("/validate")
-    public ResponseEntity<Map<String, String>> validateToken(@RequestBody Map<String, String> request) {
+    public ResponseEntity<Map<String, String>> validateToken(@RequestBody Map<String, String> request) throws ExecutionException, InterruptedException {
         Map<String, String> response = userService.validateToken(request.get("token"));
         return ResponseEntity.ok(response);
 

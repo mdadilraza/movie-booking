@@ -24,6 +24,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @Service
 @RequiredArgsConstructor
@@ -56,26 +58,27 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public AuthResponse login(AuthRequest request) {
+    public AuthResponse login(AuthRequest request) throws ExecutionException, InterruptedException {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
 
-        if (authentication.isAuthenticated()) {
-            log.info("Authentication successful");
+        log.info("Authentication successful ");
 
-            User user = (User) authentication.getPrincipal();
-            String username = user.getUsername();
-
-            String accessToken = jwtUtil.generateAccessToken(username, user.getRole());
-            RefreshToken refreshToken = refreshTokenService.createRefreshToken(username);
-
-            if (refreshToken == null) {
-                throw new IllegalArgumentException("Failed to create refresh token for user: " + username);
-            }
-            UserResponseDto userResponseDto = new UserResponseDto(user.getId(), user.getUsername(), user.getEmail(), user.getFullName(), user.getPhoneNumber(), user.getRole());
-            return new AuthResponse(accessToken, refreshToken.getToken(), userResponseDto);
+        User user = (User) authentication.getPrincipal();
+        String username = user.getUsername();
+        CompletableFuture<String> accessTokenFuture =
+                CompletableFuture.supplyAsync(() -> jwtUtil.generateAccessToken(username, user.getRole()));
+        CompletableFuture<RefreshToken> refreshTokenFuture =
+                CompletableFuture.supplyAsync(() -> refreshTokenService.createRefreshToken(username));
+        String accessToken = null;
+        RefreshToken refreshToken = null;
+        accessToken = accessTokenFuture.get();
+        refreshToken = refreshTokenFuture.get();
+        if (refreshToken == null) {
+            throw new IllegalArgumentException("Failed to create refresh token for user: " + username);
         }
+        UserResponseDto userResponseDto = new UserResponseDto(user.getId(), user.getUsername(), user.getEmail(), user.getFullName(), user.getPhoneNumber(), user.getRole());
+        return new AuthResponse(accessToken, refreshToken.getToken(), userResponseDto);
 
-        return new AuthResponse();
     }
 
     @Override
@@ -89,18 +92,27 @@ public class UserServiceImpl implements UserService {
         String newAccessToken = jwtUtil.generateAccessToken(username, user.getRole());
         UserResponseDto userResponseDto = new UserResponseDto(user.getId(), user.getUsername(), user.getEmail(), user.getFullName(), user.getPhoneNumber(), user.getRole());
 
-        return new AuthResponse(newAccessToken, refreshToken,userResponseDto);
+        return new AuthResponse(newAccessToken, refreshToken, userResponseDto);
     }
 
     @Override
-    public Map<String, String> validateToken(String token) {
+    public Map<String, String> validateToken(String token) throws ExecutionException, InterruptedException {
+        CompletableFuture<Boolean> validateTokenFuture = CompletableFuture.supplyAsync(() -> jwtUtil.validateToken(token));
+        CompletableFuture<String> usernameFuture = CompletableFuture.supplyAsync(() -> jwtUtil.extractUsername(token));
+        CompletableFuture<String> roleFuture = CompletableFuture.supplyAsync(() -> jwtUtil.extractRole(token));
+
+
+        boolean isValid = validateTokenFuture.get();
+        String username = usernameFuture.get();
+        String role = roleFuture.get();
+
         log.info("inside validate api service");
-        if (jwtUtil.validateToken(token)) {
+        if (isValid) {
             log.info("validated successfully ");
             Map<String, String> response = new HashMap<>();
-            response.put("username", jwtUtil.extractUsername(token));
-            response.put("role", jwtUtil.extractRole(token));
-            log.info("response in service -{}" ,response.get("username"));
+            response.put("username", username);
+            response.put("role", role);
+            log.info("response in service -{}", response.get("username"));
             return response;
         }
         log.info("validation failed ");

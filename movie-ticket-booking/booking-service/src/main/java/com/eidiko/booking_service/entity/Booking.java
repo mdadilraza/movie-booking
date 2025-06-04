@@ -18,6 +18,10 @@ import java.util.Set;
 @EntityListeners(AuditingEntityListener.class)
 @ToString(exclude = "seats")
 @EqualsAndHashCode(exclude = "seats")
+@Table(name = "bookings", indexes = {
+        @Index(name = "idx_booking_user_id", columnList = "userId"),
+        @Index(name = "idx_booking_showtime_id", columnList = "showtime_id")
+})
 public class Booking {
 
     @Id

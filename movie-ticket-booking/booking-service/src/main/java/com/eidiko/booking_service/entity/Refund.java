@@ -5,6 +5,10 @@ import lombok.Data;
 
 @Entity
 @Data
+@Table(name = "refund",indexes = {
+        @Index(name = "idx_bookingId",columnList = "booking_id"),
+        @Index(name = "idx_seat_number",columnList = "seat_number")
+})
 public class Refund {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)

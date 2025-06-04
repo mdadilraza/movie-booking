@@ -11,6 +11,9 @@ import java.time.LocalDateTime;
 @Entity
 @Data
 @EntityListeners(AuditingEntityListener.class)
+@Table(name = "showtime",indexes = {
+        @Index(name = "idx_movieId",columnList = "movieId")
+})
 public class Showtime {
 
     @Id
