@@ -49,14 +49,4 @@ public class BookingController {
     public ResponseEntity<List<BookingResponse>> getUserBookings(){
        return ResponseEntity.ok( bookingService.getUserBookings());
     }
-
-    private final MovieClientImpl movieClient;
-    @GetMapping("/test")
-    public ResponseEntity<String> testMovieCache() {
-        log.info("testing movie cache");
-        movieClient.validateMovie(1L); // this internally calls getSelf().cacheMovie()
-        return ResponseEntity.ok("Movie validated");
-    }
-
-
 }
