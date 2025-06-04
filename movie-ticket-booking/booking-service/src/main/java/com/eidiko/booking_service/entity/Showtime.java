@@ -12,7 +12,8 @@ import java.time.LocalDateTime;
 @Data
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "showtime",indexes = {
-        @Index(name = "idx_movieId",columnList = "movieId")
+        @Index(name = "idx_movieId",columnList = "movieId"),
+        @Index(name = "idx_isActive",columnList = "isActive")
 })
 public class Showtime {
 

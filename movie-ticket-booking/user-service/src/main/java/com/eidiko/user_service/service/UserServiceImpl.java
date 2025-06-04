@@ -137,17 +137,13 @@ public class UserServiceImpl implements UserService {
         }).orElseThrow(() -> new UserNotFoundException("UserNot Found "));
 
     }
-
     @Override
     public void delete(User user) {
         user.setActive(false);
         userRepository.save(user);
     }
-
     @Override
     public List<User> findAll() {
         return userRepository.findByIsActiveTrue();
     }
-
-
 }

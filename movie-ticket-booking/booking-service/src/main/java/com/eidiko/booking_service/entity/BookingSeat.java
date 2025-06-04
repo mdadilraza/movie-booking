@@ -12,7 +12,8 @@ import lombok.*;
 @EqualsAndHashCode(exclude = "booking")
 @Table(name = "booking_seats", indexes = {
         @Index(name = "idx_booking_id", columnList = "booking_id"),
-        @Index(name = "idx_seat_number", columnList = "seat_number")
+        @Index(name = "idx_seat_number", columnList = "seat_number"),
+        @Index(name = "idx_status",columnList = "status")
 })
 public class BookingSeat {
     @Id
