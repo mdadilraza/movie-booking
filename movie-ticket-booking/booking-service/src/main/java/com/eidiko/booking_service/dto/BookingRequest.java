@@ -1,17 +1,22 @@
 package com.eidiko.booking_service.dto;
 
 import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Map;
 import java.util.Set;
 
 
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class BookingRequest {
     @NotNull(message = "Showtime ID must not be null")
     private Long showtimeId;
-
     @NotEmpty(message = "Seat numbers must not be empty or provide at least one seat")
     private Set<@NotEmpty(message = "Seat number cannot be blank") String> seatNumbers;
     // Map of seatNumber to seatTypeId

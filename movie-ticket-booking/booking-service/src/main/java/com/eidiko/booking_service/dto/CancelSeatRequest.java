@@ -1,11 +1,13 @@
 package com.eidiko.booking_service.dto;
 
 import jakarta.validation.constraints.NotEmpty;
+import lombok.Builder;
 import lombok.Data;
 
 import java.util.Set;
 
 @Data
+@Builder
 
 public class CancelSeatRequest {
     @NotEmpty(message = "Seat numbers must not be empty or provide at least one seat")

@@ -1,9 +1,7 @@
 package com.eidiko.booking_service.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Table(name = "SEATS", schema = "ORDER_DB", indexes = {
@@ -12,6 +10,9 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
+
 public class Seats {
 
     @Id

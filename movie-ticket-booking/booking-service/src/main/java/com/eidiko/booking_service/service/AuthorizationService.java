@@ -1,9 +1,11 @@
 package com.eidiko.booking_service.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
+@Slf4j
 public class AuthorizationService {
 
     public Long getCurrentUserId() {
@@ -21,8 +23,8 @@ public class AuthorizationService {
         if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
             return false;
         }
-        System.out.println("Authorities: ");
-        auth.getAuthorities().forEach(aut -> System.out.println(aut.getAuthority()));
+        log.info("Authorities: ");
+        auth.getAuthorities().forEach(aut -> log.info(aut.getAuthority()));
         return auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }

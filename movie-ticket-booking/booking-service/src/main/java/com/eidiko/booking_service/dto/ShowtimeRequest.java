@@ -1,10 +1,17 @@
 package com.eidiko.booking_service.dto;
 
 import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class ShowtimeRequest {
     @NotNull(message = "Movie ID is required")
     @Positive(message = "Movie ID must be positive")

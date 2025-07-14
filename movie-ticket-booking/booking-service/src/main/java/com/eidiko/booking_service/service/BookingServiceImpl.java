@@ -147,10 +147,10 @@ public class BookingServiceImpl implements BookingService {
         Booking bookingSaved = bookingRepository.save(booking);
 
         // 8. Create payment
-        PaymentRequest paymentRequest = new PaymentRequest();
-        paymentRequest.setBookingId(bookingSaved.getId());
-        paymentRequest.setAmount(totalPrice);
-        paymentRequest.setNumberOfSeats(seatEntities.size());
+        PaymentRequest paymentRequest =  PaymentRequest.builder()
+                .bookingId(bookingSaved.getId())
+                .amount(totalPrice)
+                .numberOfSeats(seatEntities.size()).build();
 
         try {
             PaymentResponse paymentResponse = paymentClient.createPayment(paymentRequest);
@@ -224,9 +224,10 @@ public class BookingServiceImpl implements BookingService {
         );
 
         CompletableFuture<RefundResponse> refundResponseFuture = refundAmountFuture.thenApplyAsync(totalRefund -> {
-            RefundRequest refundRequest = new RefundRequest();
-            refundRequest.setBookingId(bookingId);
-            refundRequest.setSeatNumbers(seatsToCancel);
+            RefundRequest refundRequest =  RefundRequest.builder()
+                    .bookingId(bookingId)
+                    .seatNumbers(seatsToCancel)
+                    .build();
             return paymentClient.processRefund(refundRequest);
         });
 

@@ -1,10 +1,12 @@
 package com.eidiko.booking_service.dto;
 
 import jakarta.validation.constraints.*;
+import lombok.Builder;
 import lombok.Data;
 import java.util.Set;
 
 @Data
+@Builder
 public class RefundRequest {
     @NotNull(message = "Booking ID must not be null")
     private Long bookingId;

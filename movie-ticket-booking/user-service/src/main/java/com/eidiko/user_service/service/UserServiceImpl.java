@@ -39,7 +39,9 @@ public class UserServiceImpl implements UserService {
     private final RefreshTokenService refreshTokenService;
     private final CustomUserDetailsService customUserDetailsService;
 
+
     @Override
+
     public User register(UserRequest request) {
         log.info("UserRequest {}", request);
         if (userRepository.existsByUsername(request.getUsername()) || userRepository.existsByEmail(request.getEmail())) {
@@ -137,13 +139,17 @@ public class UserServiceImpl implements UserService {
         }).orElseThrow(() -> new UserNotFoundException("UserNot Found "));
 
     }
+
     @Override
     public void delete(User user) {
         user.setActive(false);
         userRepository.save(user);
     }
+
     @Override
     public List<User> findAll() {
         return userRepository.findByIsActiveTrue();
     }
 }
+
+

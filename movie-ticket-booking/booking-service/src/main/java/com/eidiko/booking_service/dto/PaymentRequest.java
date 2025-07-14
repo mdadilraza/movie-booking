@@ -2,9 +2,11 @@ package com.eidiko.booking_service.dto;
 
 import jakarta.validation.constraints.*;
 import jakarta.validation.constraints.Min;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
+@Builder
 public class PaymentRequest {
     @NotNull(message = "Booking ID is required")
     private Long bookingId;
