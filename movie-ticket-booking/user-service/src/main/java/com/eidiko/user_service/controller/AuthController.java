@@ -3,7 +3,7 @@ package com.eidiko.user_service.controller;
 import com.eidiko.user_service.dto.AuthRequest;
 import com.eidiko.user_service.dto.AuthResponse;
 import com.eidiko.user_service.dto.UserRequest;
-import com.eidiko.user_service.entity.User;
+import com.eidiko.user_service.dto.UserResponseDto;
 import com.eidiko.user_service.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,8 +22,8 @@ public class AuthController {
     private final UserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(@RequestBody UserRequest request) {
-        User user = userService.register(request);
+    public ResponseEntity<UserResponseDto> register(@RequestBody UserRequest request) {
+        UserResponseDto user = userService.register(request);
         return ResponseEntity.ok(user);
 
     }

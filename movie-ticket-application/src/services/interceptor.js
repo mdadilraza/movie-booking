@@ -44,7 +44,7 @@ interceptorInstance.interceptors.response.use(
                 
             }
         } else{
-            console.error("Network error: ",console.message);
+            console.error("Network error: ", error.message);
             
         }
         return Promise.reject(error);

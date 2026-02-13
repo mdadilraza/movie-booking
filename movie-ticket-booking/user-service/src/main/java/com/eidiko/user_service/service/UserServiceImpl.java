@@ -42,7 +42,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
 
-    public User register(UserRequest request) {
+    public UserResponseDto register(UserRequest request) {
         log.info("UserRequest {}", request);
         if (userRepository.existsByUsername(request.getUsername()) || userRepository.existsByEmail(request.getEmail())) {
             throw new UserAlreadyExistException("Username or email already exists");
@@ -56,7 +56,9 @@ public class UserServiceImpl implements UserService {
         user.setPhoneNumber(request.getPhoneNumber());
         user.setRole(request.getRole() != null ? request.getRole().trim().toUpperCase() : "USER");
         log.info("User {}", user);
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        return new UserResponseDto(savedUser.getId(), savedUser.getUsername(), savedUser.getEmail(),
+                savedUser.getFullName(), savedUser.getPhoneNumber(), savedUser.getRole());
     }
 
     @Override
@@ -134,7 +136,7 @@ public class UserServiceImpl implements UserService {
             existingUser.setPhoneNumber(request.getPhoneNumber());
             existingUser.setPassword(passwordEncoder.encode(request.getPassword()));
             existingUser.setUsername(request.getUsername());
-            existingUser.setRole(request.getRole().trim().toUpperCase());
+            existingUser.setRole(request.getRole() != null ? request.getRole().trim().toUpperCase() : existingUser.getRole());
             return userRepository.save(existingUser);
         }).orElseThrow(() -> new UserNotFoundException("UserNot Found "));
 
